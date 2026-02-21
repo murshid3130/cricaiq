@@ -3,54 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mehrab Ali - ESPN Data Terminal</title>
+    <title>CricAnalytics - Global Cricket Insights</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { font-family: 'Roboto', sans-serif; background: #1a1a1a; color: white; margin: 0; padding: 0; }
-        .top-bar { background: #03a9f4; padding: 10px; text-align: center; font-weight: bold; font-size: 1.2rem; }
-        .branding { background: #000; padding: 5px; text-align: center; font-size: 0.8rem; color: #03a9f4; }
-        
-        /* ESPN Style Live Card */
-        .match-container { padding: 15px; }
-        .espn-card { background: #2b2b2b; border-radius: 8px; overflow: hidden; border-bottom: 4px solid #03a9f4; margin-bottom: 20px; }
-        
-        .live-tag { background: #d71920; color: white; padding: 2px 8px; font-size: 0.7rem; font-weight: bold; border-radius: 3px; margin: 10px; display: inline-block; }
-        
-        iframe { width: 100%; height: 500px; border: none; background: white; }
-        
-        .ai-analysis { background: #333; padding: 15px; margin: 15px; border-radius: 5px; border-left: 4px solid #03a9f4; }
-        .footer { text-align: center; font-size: 0.7rem; color: #888; padding: 20px; }
+        .espn-blue { background-color: #034694; } /* ESPN Blue */
+        .card-shadow { box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24); }
     </style>
 </head>
-<body>
+<body class="bg-gray-100 font-sans text-gray-900">
 
-    <div class="top-bar">CRIC-INFO TERMINAL</div>
-    <div class="branding">DEVELOPED BY MEHRAB ALI</div>
+    <nav class="espn-blue text-white py-3 px-6 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-6">
+                <span class="text-2xl font-black tracking-tighter">CRIC<span class="text-yellow-400">INFO</span></span>
+                <div class="hidden md:flex space-x-4 text-sm font-bold uppercase">
+                    <a href="#" class="hover:text-yellow-400">Live Scores</a>
+                    <a href="#" class="hover:text-yellow-400">Series</a>
+                    <a href="#" class="hover:text-yellow-400">Teams</a>
+                    <a href="#" class="hover:text-yellow-400">Analytics</a>
+                </div>
+            </div>
+            <div class="relative">
+                <input type="text" placeholder="Search Players, Teams..." class="bg-blue-900 text-white text-sm rounded-full py-1 px-4 focus:outline-none w-64 border border-blue-700">
+            </div>
+        </div>
+    </nav>
 
-    <div class="match-container">
-        <div class="ai-analysis">
-            <strong style="color: #03a9f4;">MEHRAB'S AI ADVISOR:</strong>
-            <p id="insight">Fetching latest ball-by-ball data from Cricinfo streams...</p>
+    <main class="max-w-7xl mx-auto mt-6 px-4 grid grid-cols-1 lg:grid-cols-4 gap-6">
+        
+        <aside class="lg:col-span-1 space-y-4">
+            <div class="bg-white rounded-lg p-4 card-shadow">
+                <h3 class="font-bold border-b pb-2 mb-3">Quick Links</h3>
+                <ul class="space-y-2 text-sm text-blue-700 font-medium">
+                    <li class="hover:bg-gray-50 p-1 rounded cursor-pointer">T20 World Cup 2026</li>
+                    <li class="hover:bg-gray-50 p-1 rounded cursor-pointer">IPL 2026 Live</li>
+                    <li class="hover:bg-gray-50 p-1 rounded cursor-pointer">Test Championship</li>
+                </ul>
+            </div>
+        </aside>
+
+        <div class="lg:col-span-2 space-y-6">
+            <div class="bg-white rounded-lg overflow-hidden card-shadow">
+                <div class="bg-gray-50 p-3 border-b flex justify-between items-center">
+                    <span class="text-xs font-bold text-red-600 uppercase">Live Prediction</span>
+                    <span class="text-xs text-gray-500">Powered by Google Analysis</span>
+                </div>
+                <div class="p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="text-center w-1/3">
+                            <p class="font-bold text-lg">PAK</p>
+                            <p class="text-2xl font-black text-blue-600">62%</p>
+                        </div>
+                        <div class="text-gray-400 font-bold italic">VS</div>
+                        <div class="text-center w-1/3">
+                            <p class="font-bold text-lg">IND</p>
+                            <p class="text-2xl font-black text-gray-400">38%</p>
+                        </div>
+                    </div>
+                    <div class="w-full bg-gray-200 h-3 rounded-full overflow-hidden flex">
+                        <div class="bg-blue-600 h-full" style="width: 62%"></div>
+                        <div class="bg-gray-400 h-full" style="width: 38%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg card-shadow p-4">
+                <h2 class="font-bold text-lg mb-4">Player Strength Analysis</h2>
+                <div id="analytics-content" class="text-sm text-gray-600">
+                    Fetching latest data from Google source...
+                </div>
+            </div>
         </div>
 
-        <div class="espn-card">
-            <div class="live-tag">LIVE NOW</div>
-            <iframe src="https://m.cricbuzz.com/cricket-match/live-scores"></iframe>
-        </div>
-    </div>
+        <aside class="lg:col-span-1">
+            <div class="bg-white rounded-lg p-4 card-shadow">
+                <h3 class="font-bold text-sm mb-3 uppercase">Recent Results</h3>
+                <div class="border-b pb-2 mb-2">
+                    <p class="text-xs font-bold">AUS vs ENG (Test)</p>
+                    <p class="text-xs text-green-600">AUS won by 4 wickets</p>
+                </div>
+            </div>
+        </aside>
 
-    <div class="footer">Data synced via Public Streams | System by Mehrab Ali</div>
+    </main>
 
-    <script>
-        const matchInsights = [
-            "Pitch Report: Surface is getting slower, spinners like Rashid Khan would be deadly here.",
-            "Win Prediction: Team chasing has a 62% historical win rate on this ground.",
-            "Mehrab's Tip: The next 10 overs are crucial. Expect a flurry of wickets if the RR crosses 9.",
-            "Weather Alert: No rain expected, full 40/100 overs play possible."
-        ];
-
-        setInterval(() => {
-            document.getElementById('insight').innerText = matchInsights[Math.floor(Math.random() * matchInsights.length)];
-        }, 15000);
-    </script>
 </body>
 </html>
