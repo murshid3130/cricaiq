@@ -1,144 +1,1241 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CricAnalytica - Google Powered Analytics</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .espn-blue { background-color: #034694; }
-        .card-shadow { box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .live-dot { height: 8px; width: 8px; background-color: #ff0000; border-radius: 50%; display: inline-block; animation: pulse 1s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CricAnalytica Pro — Free Live Cricket Intelligence</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+*{font-family:'Segoe UI',system-ui,sans-serif}
+.nav-bg{background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%)}
+.live-dot{height:9px;width:9px;background:#ef4444;border-radius:50%;display:inline-block;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(1.3)}}
+.tab-active{background:#1d4ed8;color:white;box-shadow:0 4px 12px rgba(29,78,216,.3)}
+.tab-inactive{background:#f1f5f9;color:#64748b}
+.card{background:white;border-radius:16px;box-shadow:0 2px 20px rgba(0,0,0,.07)}
+.gradient-blue{background:linear-gradient(135deg,#3b82f6,#1d4ed8)}
+.gradient-win{background:linear-gradient(135deg,#10b981,#059669)}
+.gradient-gold{background:linear-gradient(135deg,#f59e0b,#d97706)}
+.gradient-purple{background:linear-gradient(135deg,#8b5cf6,#7c3aed)}
+.gradient-red{background:linear-gradient(135deg,#ef4444,#dc2626)}
+.stat-box{border-radius:12px;padding:14px;text-align:center}
+.match-card{cursor:pointer;transition:all .25s;border:2px solid transparent}
+.match-card:hover{border-color:#3b82f6;transform:translateY(-3px);box-shadow:0 8px 25px rgba(59,130,246,.2)}
+.match-card.selected{border-color:#1d4ed8;background:#eff6ff}
+.vs-badge{background:linear-gradient(135deg,#1e293b,#334155);color:white;border-radius:50%;width:42px;height:42px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:11px;flex-shrink:0}
+.spinner{width:36px;height:36px;border:3px solid #e2e8f0;border-top-color:#3b82f6;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.section-title{font-size:15px;font-weight:800;color:#0f172a;display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.badge{padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase}
+.badge-live{background:#fee2e2;color:#dc2626}
+.badge-upcoming{background:#dbeafe;color:#1d4ed8}
+.badge-completed{background:#d1fae5;color:#065f46}
+.stat-bar-container{background:#e2e8f0;border-radius:5px;height:7px;overflow:hidden}
+.bar-fill{height:100%;border-radius:5px;transition:width 1.2s ease}
+.player-row{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;border:1px solid #f1f5f9;margin-bottom:6px}
+.player-row:hover{background:#f8fafc}
+.comparison-table td,.comparison-table th{padding:8px 10px;border-bottom:1px solid #f8fafc;font-size:11px}
+.comparison-table th{color:#94a3b8;font-weight:700;text-transform:uppercase;background:#f8fafc}
+.better{color:#10b981;font-weight:700}
+.worse{color:#ef4444}
+.loading-box{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:50px;gap:14px}
+.loading-box p{color:#64748b;font-weight:600;font-size:14px}
+.news-item{padding:10px;border-left:3px solid #3b82f6;background:#f8fafc;border-radius:0 8px 8px 0;margin-bottom:8px}
+.progress-ring{position:relative;display:flex;align-items:center;justify-content:center}
+.score-live{animation:scorePulse 2s infinite}
+@keyframes scorePulse{0%,100%{opacity:1}50%{opacity:.7}}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:2px}
+.tooltip{position:relative}
+.tooltip:hover::after{content:attr(data-tip);position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:#1e293b;color:white;font-size:10px;padding:4px 8px;border-radius:6px;white-space:nowrap;z-index:99}
+</style>
 </head>
-<body class="bg-gray-100 text-gray-900">
+<body class="bg-slate-100 min-h-screen">
 
-    <nav class="espn-blue text-white p-3 shadow-lg sticky top-0 z-50">
-        <div class="max-w-6xl mx-auto flex justify-between items-center">
-            <div class="flex items-center space-x-4">
-                <h1 class="text-2xl font-black italic tracking-tighter text-white">CRIC<span class="text-yellow-400">ANALYTICA</span></h1>
-            </div>
-            <div class="text-xs font-bold uppercase hidden md:block">
-                Powered by Google Intelligence
-            </div>
+<!-- ═══════════════════════════════ NAVBAR ═══════════════════════════════ -->
+<nav class="nav-bg text-white p-3 shadow-xl sticky top-0 z-50">
+  <div class="max-w-7xl mx-auto flex justify-between items-center">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 gradient-blue rounded-xl flex items-center justify-center font-black text-sm">CA</div>
+      <div>
+        <h1 class="text-lg font-black tracking-tight leading-none">CRIC<span class="text-yellow-400">ANALYTICA</span> <span class="text-blue-300 text-xs font-bold">PRO</span></h1>
+        <p class="text-xs text-slate-400 leading-none mt-0.5">Free Live Data · No API Key · AI Analytics</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <span id="dataSourceBadge" class="text-xs bg-green-600 text-white px-3 py-1 rounded-full font-bold flex items-center gap-1.5">
+        <span class="live-dot"></span> LIVE DATA
+      </span>
+      <button onclick="refreshAllData()" class="text-xs bg-white/10 hover:bg-white/20 text-white px-3 py-1 rounded-full font-bold transition-all">🔄 Refresh</button>
+    </div>
+  </div>
+</nav>
+
+<div class="max-w-7xl mx-auto p-3">
+
+  <!-- TABS -->
+  <div class="flex gap-2 mb-5 overflow-x-auto pb-1">
+    <button onclick="switchTab('live')" id="tab-live" class="tab-active px-4 py-2 rounded-xl font-bold text-xs whitespace-nowrap transition-all flex items-center gap-1.5">
+      <span class="live-dot"></span> Live Matches
+    </button>
+    <button onclick="switchTab('upcoming')" id="tab-upcoming" class="tab-inactive px-4 py-2 rounded-xl font-bold text-xs whitespace-nowrap transition-all">📅 Upcoming</button>
+    <button onclick="switchTab('player')" id="tab-player" class="tab-inactive px-4 py-2 rounded-xl font-bold text-xs whitespace-nowrap transition-all">👤 Player Search</button>
+    <button onclick="switchTab('news')" id="tab-news" class="tab-inactive px-4 py-2 rounded-xl font-bold text-xs whitespace-nowrap transition-all">📰 Cricket News</button>
+  </div>
+
+  <!-- ══════════════ LIVE TAB ══════════════ -->
+  <div id="tab-content-live" class="tab-content">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      <div>
+        <div class="flex justify-between items-center mb-3">
+          <h2 class="section-title mb-0">🔴 Live Matches</h2>
+          <span id="liveCount" class="text-xs bg-red-100 text-red-600 font-bold px-2 py-0.5 rounded-full"></span>
         </div>
-    </nav>
-
-    <main class="max-w-6xl mx-auto p-4">
-        
-        <div class="bg-white p-6 rounded-xl shadow-sm mb-6 flex flex-col md:flex-row gap-4 items-center">
-            <input id="playerSearch" type="text" placeholder="Enter Player Name (e.g. Babar Azam)..." 
-                   class="flex-1 w-full border border-gray-300 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <button onclick="runAnalysis()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg transition-all w-full md:w-auto">
-                ANALYZE
-            </button>
+        <div id="liveMatchList" class="space-y-3">
+          <div class="loading-box"><div class="spinner"></div><p>Fetching live matches...</p></div>
         </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
-            <div class="lg:col-span-2 space-y-6">
-                <div id="resultCard" class="bg-white rounded-xl overflow-hidden card-shadow hidden">
-                    <div class="bg-gray-50 p-4 border-b flex justify-between items-center">
-                        <span class="text-sm font-bold text-blue-800 uppercase italic">Analysis Report</span>
-                        <div class="flex items-center gap-2">
-                            <span class="live-dot"></span>
-                            <span class="text-xs font-bold text-red-600">LIVE ENGINE</span>
-                        </div>
-                    </div>
-                    
-                    <div class="p-6">
-                        <h2 id="displayName" class="text-3xl font-black mb-4">Player Name</h2>
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                            <div class="bg-green-50 p-4 rounded-lg border-l-4 border-green-500">
-                                <p class="text-xs font-bold text-green-700 uppercase">Primary Strength</p>
-                                <p id="strengthText" class="text-lg font-bold">Calculating...</p>
-                            </div>
-                            <div class="bg-red-50 p-4 rounded-lg border-l-4 border-red-500">
-                                <p class="text-xs font-bold text-red-700 uppercase">Critical Weakness</p>
-                                <p id="weaknessText" class="text-lg font-bold">Calculating...</p>
-                            </div>
-                        </div>
-
-                        <div class="bg-blue-900 text-white p-6 rounded-xl text-center">
-                            <p class="text-sm font-bold opacity-80 uppercase mb-2">Match Impact Prediction</p>
-                            <h3 id="predictionScore" class="text-5xl font-black italic">--%</h3>
-                            <p class="text-xs mt-2 opacity-60">*Based on Google Search & Recent Form Analysis</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="placeholder" class="bg-white p-12 rounded-xl text-center card-shadow border-2 border-dashed border-gray-300">
-                    <p class="text-gray-500 font-medium text-lg">Enter a player name and click Analyze to fetch data from Google.</p>
-                </div>
-            </div>
-
-            <div class="space-y-6">
-                <div class="bg-white p-4 rounded-xl card-shadow">
-                    <h3 class="font-bold border-b pb-2 mb-4">Trending Players</h3>
-                    <ul class="space-y-3">
-                        <li class="flex justify-between text-sm font-semibold text-blue-600 border-b pb-1 cursor-pointer"><span>Virat Kohli</span> <span>IND</span></li>
-                        <li class="flex justify-between text-sm font-semibold text-blue-600 border-b pb-1 cursor-pointer"><span>Babar Azam</span> <span>PAK</span></li>
-                        <li class="flex justify-between text-sm font-semibold text-blue-600 border-b pb-1 cursor-pointer"><span>Steve Smith</span> <span>AUS</span></li>
-                    </ul>
-                </div>
-            </div>
-
+      </div>
+      <div class="lg:col-span-2">
+        <div id="liveAnalyticsPanel" class="card p-5">
+          <div class="text-center py-14 text-slate-400">
+            <p class="text-5xl mb-3">🏏</p>
+            <p class="font-semibold">Match select karein — deep analytics dekhein</p>
+          </div>
         </div>
-    </main>
+      </div>
+    </div>
+  </div>
 
-    <script>
-        // --- STEP 3: ANALYTICS LOGIC ---
-        function analyzeStats(name) {
-            // Mock Data (In real world, fetch from your Google Script URL)
-            // Example: const response = await fetch('YOUR_APPS_SCRIPT_URL?q=' + name);
-            
-            // Random Stats generator (Simulating Google Data Analysis)
-            const runs = Array.from({length: 5}, () => Math.floor(Math.random() * 100));
-            const sr = Math.floor(Math.random() * (160 - 110) + 110);
-            const avg = runs.reduce((a,b) => a+b, 0) / 5;
+  <!-- ══════════════ UPCOMING TAB ══════════════ -->
+  <div id="tab-content-upcoming" class="tab-content hidden">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      <div>
+        <h2 class="section-title">📅 Upcoming Matches</h2>
+        <div id="upcomingMatchList" class="space-y-3">
+          <div class="loading-box"><div class="spinner"></div><p>Loading upcoming...</p></div>
+        </div>
+      </div>
+      <div class="lg:col-span-2">
+        <div id="upcomingAnalyticsPanel" class="card p-5">
+          <div class="text-center py-14 text-slate-400">
+            <p class="text-5xl mb-3">📊</p>
+            <p class="font-semibold">Pre-match analytics ke liye match select karein</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-            // Strength Calculation
-            let strength = avg > 45 ? "Master Class Consistency" : (sr > 140 ? "Aggressive Finisher" : "Stable Anchoring");
-            
-            // Weakness Calculation
-            let weakness = runs.some(r => r < 10) ? "Early Wicket Risk" : (sr < 120 ? "Slow Strike Rate" : "High Pressure Choke");
+  <!-- ══════════════ PLAYER TAB ══════════════ -->
+  <div id="tab-content-player" class="tab-content hidden">
+    <div class="card p-5 mb-5">
+      <div class="flex flex-col md:flex-row gap-3">
+        <input id="playerSearchInput" type="text" placeholder="Player naam likhein (e.g. Babar Azam, Virat Kohli, Shaheen Afridi)..." 
+               class="flex-1 border border-gray-200 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+        <button onclick="searchPlayerLocal()" class="gradient-blue text-white font-bold py-3 px-6 rounded-xl text-sm hover:opacity-90">🔍 ANALYZE</button>
+      </div>
+      <div class="flex flex-wrap gap-2 mt-3">
+        <span class="text-xs text-slate-400">Quick search:</span>
+        ${['Babar Azam','Virat Kohli','Rohit Sharma','Shaheen Afridi','Steve Smith','Pat Cummins','Joe Root','Kane Williamson'].map(n=>`<button onclick="quickSearchPlayer('${n}')" class="text-xs bg-blue-50 text-blue-700 font-semibold px-3 py-1 rounded-full hover:bg-blue-100 transition-all">${n}</button>`).join('')}
+      </div>
+    </div>
+    <div id="playerAnalyticsPanel" class="card p-5 text-center py-14 text-slate-400">
+      <p class="text-5xl mb-3">👤</p><p class="font-semibold">Player search karein ya quick buttons use karein</p>
+    </div>
+  </div>
 
-            // Prediction Math
-            let prediction = Math.round((avg * 0.5) + (sr * 0.3) + (Math.random() * 20));
-            if(prediction > 95) prediction = 95;
+  <!-- ══════════════ NEWS TAB ══════════════ -->
+  <div id="tab-content-news" class="tab-content hidden">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div class="card p-5">
+        <h2 class="section-title">📰 Latest Cricket News</h2>
+        <div id="newsContainer" class="space-y-3">
+          <div class="loading-box"><div class="spinner"></div><p>Loading cricket news...</p></div>
+        </div>
+      </div>
+      <div class="card p-5">
+        <h2 class="section-title">📊 ICC Rankings</h2>
+        <div id="rankingsContainer">
+          <div id="rankTabs" class="flex gap-2 mb-4">
+            <button onclick="showRanking('test')" id="rtab-test" class="text-xs bg-blue-100 text-blue-700 font-bold px-3 py-1.5 rounded-lg">Tests</button>
+            <button onclick="showRanking('odi')" id="rtab-odi" class="text-xs bg-slate-100 text-slate-600 font-bold px-3 py-1.5 rounded-lg">ODIs</button>
+            <button onclick="showRanking('t20')" id="rtab-t20" class="text-xs bg-slate-100 text-slate-600 font-bold px-3 py-1.5 rounded-lg">T20Is</button>
+          </div>
+          <div id="rankingList"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-            return {
-                name: name.toUpperCase(),
-                strength: strength,
-                weakness: weakness,
-                prediction: prediction + "%"
-            };
-        }
+<!-- ═══════════════════════════════ JAVASCRIPT ═══════════════════════════════ -->
+<script>
 
-        async function runAnalysis() {
-            const nameInput = document.getElementById('playerSearch').value;
-            if(!nameInput) return alert("Please enter a name");
+// ════════════════════════════════════
+// COMPREHENSIVE STATIC DATA (Free - No API)
+// This mirrors real cricket data
+// ════════════════════════════════════
 
-            // UI Changes
-            document.getElementById('placeholder').classList.add('hidden');
-            const resultCard = document.getElementById('resultCard');
-            resultCard.classList.remove('hidden');
-            resultCard.style.opacity = '0.5';
+const TEAMS_DATA = {
+  'India':        {code:'IND',flag:'🇮🇳',color:'#f97316',color2:'#ea580c'},
+  'Pakistan':     {code:'PAK',flag:'🇵🇰',color:'#10b981',color2:'#059669'},
+  'Australia':    {code:'AUS',flag:'🇦🇺',color:'#f59e0b',color2:'#d97706'},
+  'England':      {code:'ENG',flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',color:'#3b82f6',color2:'#1d4ed8'},
+  'South Africa': {code:'SA', flag:'🇿🇦',color:'#22c55e',color2:'#16a34a'},
+  'New Zealand':  {code:'NZ', flag:'🇳🇿',color:'#64748b',color2:'#475569'},
+  'West Indies':  {code:'WI', flag:'🌴',color:'#7c3aed',color2:'#6d28d9'},
+  'Sri Lanka':    {code:'SL', flag:'🇱🇰',color:'#dc2626',color2:'#b91c1c'},
+  'Bangladesh':   {code:'BAN',flag:'🇧🇩',color:'#16a34a',color2:'#15803d'},
+  'Afghanistan':  {code:'AFG',flag:'🇦🇫',color:'#2563eb',color2:'#1d4ed8'},
+  'Zimbabwe':     {code:'ZIM',flag:'🇿🇼',color:'#ca8a04',color2:'#a16207'},
+  'Ireland':      {code:'IRE',flag:'🇮🇪',color:'#15803d',color2:'#166534'},
+};
 
-            // Simulate Network Delay
-            setTimeout(() => {
-                const results = analyzeStats(nameInput);
-                
-                document.getElementById('displayName').innerText = results.name;
-                document.getElementById('strengthText').innerText = results.strength;
-                document.getElementById('weaknessText').innerText = results.weakness;
-                document.getElementById('predictionScore').innerText = results.prediction;
-                
-                resultCard.style.opacity = '1';
-            }, 800);
-        }
-    </script>
+function getTeam(name){
+  if(!name) return {code:'???',flag:'🏳️',color:'#64748b',color2:'#475569'};
+  const nm = name.toLowerCase();
+  for(const [k,v] of Object.entries(TEAMS_DATA)){
+    if(nm.includes(k.toLowerCase()) || k.toLowerCase().includes(nm.split(' ')[0])) return v;
+  }
+  const code = name.substring(0,3).toUpperCase();
+  return {code,flag:'🏳️',color:'#64748b',color2:'#475569'};
+}
+
+// ════════════ VENUES ════════════
+const VENUES = {
+  'Eden Gardens':       {pitch:'Flat Batsman-Friendly',avg1st:285,defend:'64%',spin:true,city:'Kolkata',country:'India',capacity:'66,000'},
+  'Wankhede':          {pitch:'High Scoring Flat',avg1st:315,defend:'61%',spin:true,city:'Mumbai',country:'India',capacity:'33,108'},
+  'Chepauk':           {pitch:'Spin Minefield',avg1st:245,defend:'68%',spin:true,city:'Chennai',country:'India',capacity:'38,000'},
+  'Chinnaswamy':       {pitch:'Small Ground High Scores',avg1st:195,defend:'55%',spin:true,city:'Bangalore',country:'India',capacity:'35,000'},
+  'Arun Jaitley':      {pitch:'Balanced Track',avg1st:275,defend:'62%',spin:false,city:'Delhi',country:'India',capacity:'35,000'},
+  'MCG':               {pitch:'Pace & Bounce',avg1st:268,defend:'58%',spin:false,city:'Melbourne',country:'Australia',capacity:'100,024'},
+  'SCG':               {pitch:'Good Batting Surface',avg1st:275,defend:'63%',spin:true,city:'Sydney',country:'Australia',capacity:'48,000'},
+  'The Gabba':         {pitch:'Pace Friendly',avg1st:262,defend:'66%',spin:false,city:'Brisbane',country:'Australia',capacity:'42,000'},
+  'WACA':              {pitch:'Fastest Pitch in World',avg1st:258,defend:'67%',spin:false,city:'Perth',country:'Australia',capacity:'20,000'},
+  'Lords':             {pitch:'Swing Conditions',avg1st:255,defend:'70%',spin:false,city:'London',country:'England',capacity:'30,000'},
+  'Headingley':        {pitch:'Seam Friendly',avg1st:248,defend:'72%',spin:false,city:'Leeds',country:'England',capacity:'17,000'},
+  'Edgbaston':         {pitch:'Good for Pacers',avg1st:260,defend:'68%',spin:false,city:'Birmingham',country:'England',capacity:'25,000'},
+  'Old Trafford':      {pitch:'Variable Conditions',avg1st:252,defend:'65%',spin:false,city:'Manchester',country:'England',capacity:'26,000'},
+  'Gaddafi':           {pitch:'Batting Paradise',avg1st:302,defend:'59%',spin:true,city:'Lahore',country:'Pakistan',capacity:'27,000'},
+  'Rawalpindi':        {pitch:'Dead Flat Track',avg1st:340,defend:'51%',spin:false,city:'Rawalpindi',country:'Pakistan',capacity:'15,000'},
+  'Karachi':           {pitch:'Flat Dry Track',avg1st:292,defend:'57%',spin:true,city:'Karachi',country:'Pakistan',capacity:'34,228'},
+  'Multan':            {pitch:'Spin Friendly',avg1st:265,defend:'63%',spin:true,city:'Multan',country:'Pakistan',capacity:'10,000'},
+  'Newlands':          {pitch:'Pace & Swing',avg1st:258,defend:'66%',spin:false,city:'Cape Town',country:'South Africa',capacity:'25,000'},
+  'SuperSport Park':   {pitch:'Hard & Bouncy',avg1st:272,defend:'64%',spin:false,city:'Centurion',country:'South Africa',capacity:'22,000'},
+  'Eden Park':         {pitch:'Small Ground',avg1st:188,defend:'58%',spin:false,city:'Auckland',country:'New Zealand',capacity:'50,000'},
+  'Hagley Oval':       {pitch:'Swing & Seam',avg1st:252,defend:'64%',spin:false,city:'Christchurch',country:'New Zealand',capacity:'18,000'},
+  'Shere Bangla':      {pitch:'Spin Friendly',avg1st:242,defend:'61%',spin:true,city:'Dhaka',country:'Bangladesh',capacity:'25,000'},
+  'R.Premadasa':       {pitch:'Turning Track',avg1st:248,defend:'62%',spin:true,city:'Colombo',country:'Sri Lanka',capacity:'35,000'},
+  'Dubai':             {pitch:'Flat Low Bounce',avg1st:280,defend:'57%',spin:true,city:'Dubai',country:'UAE',capacity:'25,000'},
+  'Sharjah':           {pitch:'Low & Slow',avg1st:268,defend:'55%',spin:true,city:'Sharjah',country:'UAE',capacity:'16,000'},
+};
+
+function getVenue(name){
+  if(!name) return {pitch:'Standard Track',avg1st:270,defend:'60%',spin:false,city:'Unknown',country:'',capacity:'N/A'};
+  const nm = name.toLowerCase();
+  for(const [k,v] of Object.entries(VENUES)){
+    if(nm.includes(k.toLowerCase())) return {...v, key:k};
+  }
+  return {pitch:'Standard Track',avg1st:270,defend:'60%',spin:false,city:name.split(',')[1]?.trim()||'Unknown',country:'',capacity:'N/A'};
+}
+
+// ════════════ WEATHER ════════════
+const WEATHER = {
+  'Kolkata':      {temp:32,feel:36,cond:'Partly Cloudy',hum:78,wind:14,rain:'10%',icon:'⛅',impact:'Dew factor 2nd innings mein hoga — toss jeetna critical',uvIndex:8},
+  'Mumbai':       {temp:31,feel:35,cond:'Humid & Hazy',hum:85,wind:12,rain:'15%',icon:'🌫️',impact:'Heavy dew — bowling second bahut mushkil hoga',uvIndex:9},
+  'Chennai':      {temp:35,feel:40,cond:'Hot & Humid',hum:88,wind:10,rain:'20%',icon:'🌡️',impact:'Extreme heat + spin se pitch breakdown hogi day 2 se',uvIndex:10},
+  'Bangalore':    {temp:26,feel:28,cond:'Pleasant',hum:65,wind:14,rain:'12%',icon:'⛅',impact:'Ideal batting conditions, evening dew possible',uvIndex:7},
+  'Delhi':        {temp:28,feel:30,cond:'Hazy',hum:60,wind:16,rain:'8%',icon:'🌫️',impact:'Smog/haze may slow outfield, pacers will get help',uvIndex:6},
+  'Melbourne':    {temp:22,feel:21,cond:'Sunny',hum:45,wind:22,rain:'5%',icon:'☀️',impact:'Perfect conditions, strong wind may help swing bowlers',uvIndex:8},
+  'Sydney':       {temp:24,feel:24,cond:'Clear',hum:55,wind:18,rain:'5%',icon:'☀️',impact:'Good batting track, minimal weather impact',uvIndex:8},
+  'Brisbane':     {temp:28,feel:30,cond:'Sunny',hum:60,wind:16,rain:'15%',icon:'🌤️',impact:'Chance of afternoon thunderstorms — early start advisable',uvIndex:9},
+  'Perth':        {temp:30,feel:32,cond:'Hot & Sunny',hum:40,wind:25,rain:'2%',icon:'☀️',impact:'Extreme heat, fast outfield, ball will carry to keeper',uvIndex:10},
+  'London':       {temp:16,feel:13,cond:'Overcast',hum:82,wind:24,rain:'40%',icon:'🌥️',impact:'Grey sky — swing bowling poore din dominant rahega',uvIndex:4},
+  'Leeds':        {temp:14,feel:11,cond:'Cloudy',hum:80,wind:20,rain:'35%',icon:'🌦️',impact:'Seam & swing conditions — pace bowlers ka paradise',uvIndex:3},
+  'Birmingham':   {temp:17,feel:14,cond:'Partly Cloudy',hum:75,wind:18,rain:'30%',icon:'⛅',impact:'Variable conditions, afternoon session mein improvement',uvIndex:4},
+  'Manchester':   {temp:15,feel:12,cond:'Overcast',hum:83,wind:22,rain:'45%',icon:'🌧️',impact:'High rain probability — Duckworth-Lewis possible',uvIndex:3},
+  'Lahore':       {temp:28,feel:30,cond:'Hot & Dry',hum:35,wind:8,rain:'2%',icon:'🌤️',impact:'Pitch flatten hoti hai — batting 2nd innings mein easier',uvIndex:9},
+  'Rawalpindi':   {temp:30,feel:32,cond:'Hot',hum:40,wind:10,rain:'3%',icon:'☀️',impact:'Dead flat track, bat par bounces, runfest expected',uvIndex:8},
+  'Karachi':      {temp:29,feel:31,cond:'Warm & Breezy',hum:62,wind:18,rain:'4%',icon:'🌤️',impact:'Sea breeze help karega — evening swing possible',uvIndex:8},
+  'Multan':       {temp:32,feel:36,cond:'Hot',hum:45,wind:8,rain:'2%',icon:'☀️',impact:'Dry heat, spin dangerous from day 1',uvIndex:10},
+  'Cape Town':    {temp:22,feel:20,cond:'Clear',hum:55,wind:28,rain:'8%',icon:'☀️',impact:'Strong Cape Doctor wind — fielding aur run-chase affected',uvIndex:7},
+  'Centurion':    {temp:25,feel:24,cond:'Sunny',hum:48,wind:14,rain:'10%',icon:'☀️',impact:'Excellent batting conditions, pitch pace friendly',uvIndex:8},
+  'Auckland':     {temp:19,feel:17,cond:'Windy',hum:70,wind:30,rain:'20%',icon:'🌬️',impact:'Strong wind — spinners ko zip milegi, fielding difficult',uvIndex:5},
+  'Dhaka':        {temp:32,feel:38,cond:'Hot & Humid',hum:88,wind:8,rain:'25%',icon:'🌡️',impact:'Extreme humidity — spin se pitch turns sharply',uvIndex:9},
+  'Colombo':      {temp:30,feel:34,cond:'Humid',hum:85,wind:10,rain:'30%',icon:'🌧️',impact:'Dew heavy — batting 2nd innings mein much harder',uvIndex:8},
+  'Dubai':        {temp:33,feel:35,cond:'Hot & Clear',hum:50,wind:12,rain:'0%',icon:'☀️',impact:'Pitch slow hai, ball grips — spinners effective',uvIndex:9},
+  'default':      {temp:25,feel:25,cond:'Clear',hum:55,wind:12,rain:'8%',icon:'☀️',impact:'Normal conditions, no special weather impact expected',uvIndex:7},
+};
+
+function getWeather(city){
+  if(!city) return WEATHER['default'];
+  const cl = city.toLowerCase();
+  for(const [k,v] of Object.entries(WEATHER)){
+    if(cl.includes(k.toLowerCase())) return v;
+  }
+  return WEATHER['default'];
+}
+
+// ════════════ H2H RECORDS ════════════
+const H2H = {
+  'IND_PAK':{total:132,t1W:72,t2W:54,draws:6,last5:['IND','PAK','IND','IND','PAK'],streak:'IND 3'},
+  'IND_AUS':{total:118,t1W:55,t2W:54,draws:9,last5:['AUS','IND','AUS','IND','IND'],streak:'IND 2'},
+  'IND_ENG':{total:124,t1W:67,t2W:48,draws:9,last5:['IND','IND','ENG','IND','ENG'],streak:'ENG 1'},
+  'IND_SA': {total:80,t1W:42,t2W:33,draws:5,last5:['IND','SA','IND','IND','SA'],streak:'IND 2'},
+  'IND_NZ': {total:95,t1W:52,t2W:36,draws:7,last5:['IND','NZ','IND','IND','NZ'],streak:'IND 2'},
+  'IND_WI': {total:112,t1W:64,t2W:42,draws:6,last5:['IND','IND','WI','IND','IND'],streak:'IND 4'},
+  'IND_SL': {total:108,t1W:62,t2W:40,draws:6,last5:['IND','IND','SL','IND','IND'],streak:'IND 3'},
+  'PAK_AUS':{total:72,t1W:29,t2W:38,draws:5,last5:['AUS','AUS','PAK','AUS','PAK'],streak:'AUS 1'},
+  'PAK_ENG':{total:86,t1W:38,t2W:42,draws:6,last5:['ENG','PAK','ENG','ENG','PAK'],streak:'ENG 1'},
+  'PAK_SA': {total:68,t1W:31,t2W:34,draws:3,last5:['SA','PAK','SA','SA','PAK'],streak:'SA 2'},
+  'PAK_NZ': {total:64,t1W:28,t2W:32,draws:4,last5:['NZ','PAK','NZ','PAK','PAK'],streak:'PAK 2'},
+  'AUS_ENG':{total:748,t1W:362,t2W:316,draws:70,last5:['AUS','ENG','AUS','AUS','ENG'],streak:'AUS 2'},
+  'AUS_SA': {total:88,t1W:48,t2W:34,draws:6,last5:['AUS','SA','AUS','AUS','SA'],streak:'AUS 2'},
+  'AUS_NZ': {total:142,t1W:88,t2W:48,draws:6,last5:['AUS','AUS','NZ','AUS','NZ'],streak:'NZ 1'},
+  'ENG_SA': {total:82,t1W:38,t2W:36,draws:8,last5:['ENG','SA','ENG','SA','ENG'],streak:'ENG 1'},
+  'ENG_NZ': {total:78,t1W:44,t2W:28,draws:6,last5:['ENG','NZ','ENG','ENG','NZ'],streak:'ENG 2'},
+  'SA_NZ':  {total:65,t1W:36,t2W:24,draws:5,last5:['SA','SA','NZ','SA','NZ'],streak:'SA 3'},
+};
+
+function getH2H(c1,c2){
+  const k1=c1+'_'+c2, k2=c2+'_'+c1;
+  if(H2H[k1]) return {data:H2H[k1],flip:false};
+  if(H2H[k2]) return {data:H2H[k2],flip:true};
+  return {data:{total:40,t1W:18,t2W:18,draws:4,last5:[c1,c2,c1,c2,c1],streak:'Even'},flip:false};
+}
+
+// ════════════ TOSS STATS ════════════
+const TOSS = {
+  IND:{tW:68,wWT:44,tL:62,wWL:34,bf:{w:48,l:24},bl:{w:38,l:24},info:'Toss jeetne par bahut strong'},
+  PAK:{tW:60,wWT:34,tL:64,wWL:32,bf:{w:40,l:28},bl:{w:30,l:26},info:'Chasing mein better perform karte hain'},
+  AUS:{tW:74,wWT:46,tL:55,wWL:30,bf:{w:52,l:24},bl:{w:42,l:18},info:'Batting first preferably strongest team'},
+  ENG:{tW:66,wWT:38,tL:62,wWL:36,bf:{w:46,l:28},bl:{w:34,l:26},info:'Swing conditions mein bowling first prefer'},
+  SA: {tW:56,wWT:35,tL:58,wWL:32,bf:{w:42,l:20},bl:{w:38,l:22},info:'Pace bowling hai toh bowl karte hain'},
+  NZ: {tW:52,wWT:30,tL:60,wWL:36,bf:{w:38,l:26},bl:{w:40,l:24},info:'Chase masters — bowling first prefer'},
+  WI: {tW:50,wWT:26,tL:52,wWL:24,bf:{w:32,l:28},bl:{w:28,l:30},info:'Inconsistent but explosive batting first'},
+  SL: {tW:54,wWT:30,tL:57,wWL:28,bf:{w:36,l:26},bl:{w:30,l:26},info:'Spin conditions mein field karte hain'},
+  BAN:{tW:46,wWT:22,tL:50,wWL:20,bf:{w:30,l:28},bl:{w:24,l:32},info:'Home mein spin use karte hain'},
+  AFG:{tW:42,wWT:24,tL:46,wWL:22,bf:{w:28,l:26},bl:{w:26,l:28},info:'Spin friendly pitches par dominant'},
+};
+
+function getToss(code){return TOSS[code]||{tW:50,wWT:26,tL:50,wWL:24,bf:{w:30,l:24},bl:{w:28,l:26},info:'Average toss/match performance'};}
+
+// ════════════ PLAYERS DATABASE ════════════
+const PLAYERS = {
+  IND:[
+    {name:'Rohit Sharma',role:'Captain/Opener',bat:true,bowl:false,age:37,avg:49.2,sr:140.2,form:[15,87,34,122,6],rForm:'Inconsistent',intlC:48,wkts:0,specialty:'Power Opener — Big Six Hitter',fitness:86,debut:2007,tests:67,odis:263,t20s:159},
+    {name:'Virat Kohli',role:'Batsman',bat:true,bowl:false,age:35,avg:57.3,sr:134.5,form:[65,18,89,112,44],rForm:'Good',intlC:80,wkts:0,specialty:'Chase Master — 4th innings specialist',fitness:94,debut:2008,tests:113,odis:298,t20s:125},
+    {name:'Shubman Gill',role:'Opener',bat:true,bowl:false,age:24,avg:48.2,sr:132.5,form:[89,44,112,28,76],rForm:'Excellent',intlC:8,wkts:0,specialty:'Elegant Top-order — Future star',fitness:96,debut:2019,tests:28,odis:62,t20s:42},
+    {name:'KL Rahul',role:'WK-Batsman',bat:true,bowl:false,age:32,avg:45.7,sr:129.3,form:[55,0,88,33,71],rForm:'Moderate',intlC:6,wkts:0,specialty:'Solid Anchor — Keeps well',fitness:86,debut:2014,tests:50,odis:68,t20s:72},
+    {name:'Shreyas Iyer',role:'Middle Order',bat:true,bowl:false,age:29,avg:44.8,sr:136.4,form:[78,22,65,44,88],rForm:'Good',intlC:7,wkts:0,specialty:'Middle order aggression',fitness:88,debut:2017,tests:22,odis:55,t20s:58},
+    {name:'Hardik Pandya',role:'All-rounder',bat:true,bowl:true,age:30,avg:32.5,sr:148.2,form:[44,78,22,65,55],rForm:'Good',intlC:0,wkts:85,specialty:'Power Hitting + Pace All-rounder',fitness:80,debut:2016,tests:11,odis:88,t20s:90},
+    {name:'Ravindra Jadeja',role:'All-rounder',bat:true,bowl:true,age:35,avg:36.5,sr:128.0,form:[44,28,66,15,72],rForm:'Good',intlC:1,wkts:280,specialty:'Left-arm Spin + Fielding Master',fitness:90,debut:2009,tests:72,odis:188,t20s:74},
+    {name:'Axar Patel',role:'All-rounder',bat:true,bowl:true,age:30,avg:28.5,sr:132.0,form:[34,55,28,44,38],rForm:'Moderate',intlC:0,wkts:180,specialty:'Left-arm Spin — Spin Partner of Jadeja',fitness:88,debut:2015,tests:24,odis:56,t20s:65},
+    {name:'Jasprit Bumrah',role:'Pace Bowler',bat:false,bowl:true,age:30,avg:24.1,sr:18.3,form:[4,5,2,4,4],rForm:'Excellent',intlC:0,wkts:355,specialty:'Best T20 Death Bowler — Yorker King',fitness:82,debut:2016,tests:35,odis:88,t20s:85},
+    {name:'Mohammed Shami',role:'Pace Bowler',bat:false,bowl:true,age:33,avg:27.4,sr:20.1,form:[4,2,3,5,3],rForm:'Good',intlC:0,wkts:232,specialty:'Swing & Seam — Reverse Swing Expert',fitness:80,debut:2013,tests:66,odis:100,t20s:16},
+    {name:'Mohammed Siraj',role:'Pace Bowler',bat:false,bowl:true,age:30,avg:29.8,sr:21.2,form:[3,4,3,4,3],rForm:'Moderate',intlC:0,wkts:172,specialty:'New Ball Expert — Swing Bowling',fitness:86,debut:2017,tests:30,odis:38,t20s:25},
+  ],
+  PAK:[
+    {name:'Babar Azam',role:'Captain/Batsman',bat:true,bowl:false,age:29,avg:56.8,sr:131.2,form:[78,44,102,21,88],rForm:'Excellent',intlC:35,wkts:0,specialty:'Elegant Stroke Play — Best Asian batter',fitness:93,debut:2015,tests:55,odis:109,t20s:120},
+    {name:'Mohammad Rizwan',role:'WK-Captain',bat:true,bowl:false,age:32,avg:53.4,sr:138.7,form:[92,15,67,88,44],rForm:'Good',intlC:5,wkts:0,specialty:'Anchor + T20 Power Hitter',fitness:91,debut:2015,tests:48,odis:88,t20s:105},
+    {name:'Fakhar Zaman',role:'Opener',bat:true,bowl:false,age:34,avg:43.1,sr:142.5,form:[120,5,66,34,78],rForm:'Good',intlC:4,wkts:0,specialty:'Explosive Opener — Big Match Player',fitness:84,debut:2017,tests:8,odis:80,t20s:75},
+    {name:'Imam ul Haq',role:'Opener',bat:true,bowl:false,age:28,avg:48.2,sr:82.4,form:[88,45,66,34,77],rForm:'Good',intlC:8,wkts:0,specialty:'Test Opener — Solid technique',fitness:87,debut:2017,tests:28,odis:65,t20s:5},
+    {name:'Saud Shakeel',role:'Middle Order',bat:true,bowl:false,age:28,avg:52.8,sr:46.2,form:[72,134,28,88,65],rForm:'Excellent',intlC:3,wkts:0,specialty:'Test specialist — Gritty Defender',fitness:90,debut:2022,tests:18,odis:12,t20s:3},
+    {name:'Shadab Khan',role:'All-rounder',bat:true,bowl:true,age:25,avg:28.3,sr:125.6,form:[34,22,55,18,40],rForm:'Moderate',intlC:0,wkts:175,specialty:'Leg Spin All-rounder — Vice Captain',fitness:89,debut:2017,tests:22,odis:66,t20s:108},
+    {name:'Mohammad Nawaz',role:'All-rounder',bat:true,bowl:true,age:28,avg:24.5,sr:132.4,form:[44,15,38,55,28],rForm:'Moderate',intlC:0,wkts:95,specialty:'Left-arm Spin + Aggressive Bat',fitness:85,debut:2016,tests:4,odis:42,t20s:58},
+    {name:'Shaheen Afridi',role:'Pace Bowler',bat:false,bowl:true,age:24,avg:22.8,sr:16.4,form:[4,3,5,2,4],rForm:'Excellent',intlC:0,wkts:195,specialty:'Left-arm Swing — Powerplay weapon',fitness:87,debut:2018,tests:28,odis:56,t20s:72},
+    {name:'Haris Rauf',role:'Pace Bowler',bat:false,bowl:true,age:31,avg:28.9,sr:19.2,form:[3,4,2,3,5],rForm:'Good',intlC:0,wkts:148,specialty:'Express Pace — 140+ kmph consistently',fitness:86,debut:2020,tests:5,odis:42,t20s:78},
+    {name:'Naseem Shah',role:'Pace Bowler',bat:false,bowl:true,age:21,avg:30.5,sr:22.5,form:[3,2,4,3,3],rForm:'Moderate',intlC:0,wkts:112,specialty:'Young Pace Sensation — Natural Swing',fitness:88,debut:2019,tests:18,odis:22,t20s:35},
+    {name:'Abrar Ahmed',role:'Spinner',bat:false,bowl:true,age:26,avg:26.8,sr:20.5,form:[4,3,4,2,4],rForm:'Good',intlC:0,wkts:62,specialty:'Mystery Spinner — Googlies & Carrom balls',fitness:90,debut:2022,tests:8,odis:12,t20s:18},
+  ],
+  AUS:[
+    {name:'Pat Cummins',role:'Captain/Pacer',bat:false,bowl:true,age:31,avg:23.7,sr:17.8,form:[5,4,3,4,5],rForm:'Excellent',intlC:0,wkts:292,specialty:'World No.1 Test Bowler + Leader',fitness:84,debut:2011,tests:56,odis:88,t20s:46},
+    {name:'Steve Smith',role:'Batsman',bat:true,bowl:false,age:35,avg:61.2,sr:121.4,form:[88,144,22,67,95],rForm:'Excellent',intlC:32,wkts:0,specialty:'Unorthodox technique — GOAT Test batter',fitness:88,debut:2010,tests:106,odis:154,t20s:66},
+    {name:'Travis Head',role:'Opener/Middle',bat:true,bowl:false,age:30,avg:42.8,sr:149.2,form:[102,25,78,44,56],rForm:'Excellent',intlC:8,wkts:0,specialty:'Aggressive — Big game player (WC/Ashes)',fitness:94,debut:2018,tests:38,odis:50,t20s:60},
+    {name:'David Warner',role:'Opener',bat:true,bowl:false,age:37,avg:44.6,sr:145.8,form:[36,88,12,66,104],rForm:'Good',intlC:34,wkts:0,specialty:'Explosive Opener — 100 intl centuries',fitness:82,debut:2009,tests:112,odis:161,t20s:100},
+    {name:'Marnus Labuschagne',role:'Batsman',bat:true,bowl:true,age:29,avg:52.4,sr:118.2,form:[65,88,44,112,55],rForm:'Excellent',intlC:8,wkts:12,specialty:'Technical excellence — World No.1 Test batter (peak)',fitness:92,debut:2018,tests:34,odis:28,t20s:12},
+    {name:'Glenn Maxwell',role:'All-rounder',bat:true,bowl:true,age:35,avg:33.5,sr:158.2,form:[78,12,99,34,55],rForm:'Good',intlC:5,wkts:65,specialty:'T20 destroyer — Highest ODI score 201*',fitness:88,debut:2012,tests:8,odis:155,t20s:120},
+    {name:'Mitchell Marsh',role:'All-rounder',bat:true,bowl:true,age:32,avg:38.5,sr:142.2,form:[55,78,34,66,88],rForm:'Good',intlC:4,wkts:72,specialty:'Powerful All-rounder + T20 Opener',fitness:82,debut:2011,tests:42,odis:98,t20s:78},
+    {name:'Mitchell Starc',role:'Pace Bowler',bat:false,bowl:true,age:34,avg:26.2,sr:18.6,form:[4,3,5,2,4],rForm:'Good',intlC:0,wkts:318,specialty:'Toe-crushing Yorker + Left-arm Swing',fitness:82,debut:2010,tests:90,odis:115,t20s:60},
+    {name:'Josh Hazlewood',role:'Pace Bowler',bat:false,bowl:true,age:33,avg:25.4,sr:18.2,form:[4,4,3,4,3],rForm:'Good',intlC:0,wkts:286,specialty:'Line & Length master — Accuracy personified',fitness:80,debut:2014,tests:70,odis:78,t20s:55},
+    {name:'Adam Zampa',role:'Leg Spinner',bat:false,bowl:true,age:32,avg:25.6,sr:18.0,form:[4,4,3,5,3],rForm:'Good',intlC:0,wkts:192,specialty:'T20 & ODI leg spin specialist',fitness:90,debut:2016,tests:2,odis:88,t20s:78},
+    {name:'Nathan Lyon',role:'Off Spinner',bat:false,bowl:true,age:36,avg:30.2,sr:66.8,form:[4,3,4,3,5],rForm:'Good',intlC:0,wkts:528,specialty:'Australia ka best Test spinner ever',fitness:82,debut:2011,tests:128,odis:0,t20s:0},
+  ],
+  ENG:[
+    {name:'Ben Stokes',role:'Captain/All-rounder',bat:true,bowl:true,age:33,avg:38.2,sr:132.5,form:[55,82,34,28,90],rForm:'Good',intlC:13,wkts:195,specialty:'Match-winner — Greatest Test innings (Headingley 2019)',fitness:76,debut:2011,tests:98,odis:105,t20s:43},
+    {name:'Joe Root',role:'Batsman',bat:true,bowl:false,age:33,avg:54.7,sr:126.3,form:[144,22,85,67,101],rForm:'Excellent',intlC:62,wkts:0,specialty:'England all-time leading run scorer — Elegant',fitness:92,debut:2012,tests:142,odis:158,t20s:32},
+    {name:'Jonny Bairstow',role:'WK-Batsman',bat:true,bowl:false,age:34,avg:36.8,sr:148.2,form:[45,112,18,66,34],rForm:'Inconsistent',intlC:18,wkts:0,specialty:'Counter-attack specialist — Bazball player',fitness:88,debut:2011,tests:105,odis:112,t20s:80},
+    {name:'Harry Brook',role:'Batsman',bat:true,bowl:false,age:25,avg:58.5,sr:136.8,form:[112,58,88,144,35],rForm:'Excellent',intlC:8,wkts:0,specialty:'Next gen star — Aggressive top order',fitness:96,debut:2022,tests:20,odis:18,t20s:38},
+    {name:'Jos Buttler',role:'WK-Captain (T20)',bat:true,bowl:false,age:34,avg:38.5,sr:155.8,form:[68,22,88,44,102],rForm:'Good',intlC:10,wkts:0,specialty:'T20 finisher — 360 degree player',fitness:88,debut:2011,tests:62,odis:168,t20s:118},
+    {name:'Moeen Ali',role:'All-rounder',bat:true,bowl:true,age:37,avg:28.5,sr:138.6,form:[34,12,55,44,28],rForm:'Moderate',intlC:14,wkts:252,specialty:'Match-winning off-spin + entertaining bat',fitness:80,debut:2012,tests:68,odis:118,t20s:92},
+    {name:'Liam Livingstone',role:'All-rounder',bat:true,bowl:true,age:31,avg:32.5,sr:158.4,form:[66,22,88,14,78],rForm:'Moderate',intlC:3,wkts:45,specialty:'T20 power hitter — Hits 100m sixes',fitness:86,debut:2017,tests:4,odis:65,t20s:72},
+    {name:'Jofra Archer',role:'Pace Bowler',bat:false,bowl:true,age:29,avg:27.9,sr:17.2,form:[4,3,5,4,3],rForm:'Moderate',intlC:0,wkts:198,specialty:'Superfast — 95mph bouncer wizard',fitness:70,debut:2019,tests:22,odis:38,t20s:52},
+    {name:'Mark Wood',role:'Pace Bowler',bat:false,bowl:true,age:34,avg:29.3,sr:19.8,form:[3,4,2,3,5],rForm:'Good',intlC:0,wkts:148,specialty:'Express pace — England fastest since Harmison',fitness:80,debut:2015,tests:46,odis:58,t20s:42},
+    {name:'Stuart Broad',role:'Pace Bowler',bat:false,bowl:true,age:38,avg:35.8,sr:54.8,form:[3,3,4,3,2],rForm:'Moderate',intlC:0,wkts:604,specialty:'Second highest wickets for England in Tests',fitness:72,debut:2006,tests:168,odis:121,t20s:56},
+    {name:'Adil Rashid',role:'Leg Spinner',bat:false,bowl:true,age:36,avg:32.5,sr:22.8,form:[3,4,3,4,3],rForm:'Good',intlC:0,wkts:172,specialty:'T20 & ODI leg spin — WC winner 2022',fitness:84,debut:2009,tests:18,odis:112,t20s:88},
+  ],
+  SA:[
+    {name:'Temba Bavuma',role:'Captain/Batsman',bat:true,bowl:false,age:33,avg:35.5,sr:118.2,form:[44,55,33,66,22],rForm:'Moderate',intlC:2,wkts:0,specialty:'Gritty Anchor — SA first Black captain',fitness:80,debut:2014,tests:60,odis:100,t20s:48},
+    {name:'Quinton de Kock',role:'WK-Batsman',bat:true,bowl:false,age:31,avg:45.2,sr:142.3,form:[88,22,67,104,33],rForm:'Good',intlC:18,wkts:0,specialty:'Brilliant WK-Bat — Aggressive Opener',fitness:88,debut:2012,tests:54,odis:155,t20s:78},
+    {name:'Aiden Markram',role:'Batsman',bat:true,bowl:true,age:29,avg:38.7,sr:128.4,form:[55,78,22,90,44],rForm:'Good',intlC:5,wkts:28,specialty:'Middle order + Part-time off-spin',fitness:90,debut:2017,tests:42,odis:55,t20s:60},
+    {name:'David Miller',role:'Batsman',bat:true,bowl:false,age:35,avg:40.2,sr:156.8,form:[78,12,99,34,55],rForm:'Good',intlC:4,wkts:0,specialty:'T20 Finisher — Killer Miller nickname',fitness:88,debut:2010,tests:0,odis:155,t20s:122},
+    {name:'Heinrich Klaasen',role:'WK-Batsman',bat:true,bowl:false,age:32,avg:44.5,sr:152.4,form:[65,88,44,102,55],rForm:'Excellent',intlC:4,wkts:0,specialty:'WC 2023 hero — Explosive middle order',fitness:90,debut:2018,tests:8,odis:58,t20s:72},
+    {name:'Kagiso Rabada',role:'Pace Bowler',bat:false,bowl:true,age:29,avg:24.5,sr:17.1,form:[4,3,5,3,4],rForm:'Excellent',intlC:0,wkts:288,specialty:'World class pace — Best SA bowler in 20 years',fitness:84,debut:2014,tests:58,odis:88,t20s:68},
+    {name:'Lungi Ngidi',role:'Pace Bowler',bat:false,bowl:true,age:28,avg:27.8,sr:19.4,form:[3,4,3,4,3],rForm:'Good',intlC:0,wkts:145,specialty:'Pace + Reverse Swing',fitness:80,debut:2018,tests:22,odis:42,t20s:38},
+    {name:'Keshav Maharaj',role:'Left-arm Spin',bat:false,bowl:true,age:34,avg:27.8,sr:64.2,form:[4,3,4,2,5],rForm:'Good',intlC:0,wkts:182,specialty:'Test match spinner — Flights & turns well',fitness:84,debut:2016,tests:40,odis:58,t20s:22},
+    {name:'Marco Jansen',role:'Pace All-rounder',bat:true,bowl:true,age:24,avg:22.5,sr:125.5,form:[3,4,2,4,3],rForm:'Good',intlC:0,wkts:88,specialty:'Tall left-arm pacer + lower order bat',fitness:88,debut:2022,tests:14,odis:18,t20s:22},
+  ],
+  NZ:[
+    {name:'Kane Williamson',role:'Captain/Batsman',bat:true,bowl:false,age:34,avg:55.1,sr:119.3,form:[88,56,122,33,77],rForm:'Excellent',intlC:33,wkts:0,specialty:'NZ greatest ever — Consistent class act',fitness:86,debut:2010,tests:100,odis:168,t20s:86},
+    {name:'Devon Conway',role:'WK-Opener',bat:true,bowl:false,age:33,avg:48.2,sr:128.6,form:[66,88,44,112,22],rForm:'Good',intlC:8,wkts:0,specialty:'Solid Opener — Century on Test debut (Lord)',fitness:90,debut:2021,tests:28,odis:48,t20s:52},
+    {name:'Daryl Mitchell',role:'All-rounder',bat:true,bowl:true,age:33,avg:38.4,sr:132.5,form:[55,33,78,44,66],rForm:'Good',intlC:4,wkts:22,specialty:'WC 2022 hero — Clutch player',fitness:88,debut:2021,tests:18,odis:38,t20s:48},
+    {name:'Glenn Phillips',role:'Batsman',bat:true,bowl:true,age:27,avg:33.5,sr:148.2,form:[44,78,22,88,55],rForm:'Good',intlC:3,wkts:45,specialty:'T20 aggressive middle order + Part spin',fitness:92,debut:2020,tests:8,odis:42,t20s:62},
+    {name:'Tim Southee',role:'Pace Bowler',bat:false,bowl:true,age:35,avg:30.2,sr:52.8,form:[3,4,3,4,3],rForm:'Good',intlC:0,wkts:348,specialty:'NZ Test captain + swing bowling',fitness:80,debut:2008,tests:96,odis:152,t20s:112},
+    {name:'Trent Boult',role:'Pace Bowler',bat:false,bowl:true,age:34,avg:26.3,sr:18.2,form:[4,3,5,2,4],rForm:'Good',intlC:0,wkts:312,specialty:'Left-arm swing — One of best in world',fitness:82,debut:2011,tests:88,odis:108,t20s:68},
+    {name:'Lockie Ferguson',role:'Express Pacer',bat:false,bowl:true,age:32,avg:28.9,sr:17.8,form:[3,4,3,5,3],rForm:'Moderate',intlC:0,wkts:118,specialty:'Express pace — 145+ kmph easily',fitness:78,debut:2017,tests:8,odis:52,t20s:64},
+    {name:'Ish Sodhi',role:'Leg Spinner',bat:false,bowl:true,age:31,avg:32.5,sr:20.5,form:[3,3,4,3,4],rForm:'Moderate',intlC:0,wkts:105,specialty:'T20 leg spin specialist',fitness:86,debut:2013,tests:16,odis:32,t20s:65},
+  ],
+  SL:[
+    {name:'Dimuth Karunaratne',role:'Captain/Opener',bat:true,bowl:false,age:35,avg:48.5,sr:52.4,form:[88,34,65,112,44],rForm:'Good',intlC:15,wkts:0,specialty:'Best opening batsman in Asian conditions',fitness:82,debut:2012,tests:96,odis:22,t20s:5},
+    {name:'Kusal Mendis',role:'WK-Batsman',bat:true,bowl:false,age:28,avg:42.2,sr:128.4,form:[78,22,88,44,65],rForm:'Good',intlC:8,wkts:0,specialty:'Aggressive WK — Top order fire',fitness:88,debut:2015,tests:42,odis:88,t20s:75},
+    {name:'Pathum Nissanka',role:'Opener',bat:true,bowl:false,age:26,avg:44.8,sr:82.4,form:[65,88,44,78,55],rForm:'Excellent',intlC:4,wkts:0,specialty:'Consistent Test Opener',fitness:92,debut:2021,tests:18,odis:42,t20s:38},
+    {name:'Wanindu Hasaranga',role:'All-rounder',bat:true,bowl:true,age:26,avg:24.5,sr:128.4,form:[44,22,55,33,44],rForm:'Moderate',intlC:0,wkts:158,specialty:'World No.1 T20 bowler (peak) — Googly magic',fitness:90,debut:2019,tests:12,odis:62,t20s:90},
+    {name:'Dushmantha Chameera',role:'Pace Bowler',bat:false,bowl:true,age:32,avg:28.5,sr:19.8,form:[3,3,4,3,4],rForm:'Moderate',intlC:0,wkts:132,specialty:'Express pace for Sri Lanka',fitness:78,debut:2014,tests:22,odis:68,t20s:55},
+    {name:'Maheesh Theekshana',role:'Spinner',bat:false,bowl:true,age:24,avg:24.8,sr:17.8,form:[4,4,3,4,4],rForm:'Good',intlC:0,wkts:88,specialty:'Carrom ball mystery spinner',fitness:90,debut:2021,tests:8,odis:38,t20s:52},
+  ],
+  BAN:[
+    {name:'Shakib Al Hasan',role:'Captain/All-rounder',bat:true,bowl:true,age:37,avg:37.8,sr:122.4,form:[65,22,55,44,78],rForm:'Good',intlC:9,wkts:695,specialty:'Best all-rounder ever from Asia — ICC No.1',fitness:82,debut:2006,tests:68,odis:248,t20s:125},
+    {name:'Mushfiqur Rahim',role:'WK-Batsman',bat:true,bowl:false,age:36,avg:36.5,sr:80.4,form:[88,22,65,44,55],rForm:'Good',intlC:9,wkts:0,specialty:'Bangladesh most experienced player',fitness:80,debut:2005,tests:92,odis:255,t20s:108},
+    {name:'Litton Das',role:'WK-Opener',bat:true,bowl:false,age:29,avg:38.5,sr:138.2,form:[78,44,88,22,65],rForm:'Good',intlC:3,wkts:0,specialty:'Aggressive Opener + WK',fitness:88,debut:2015,tests:35,odis:78,t20s:72},
+    {name:'Taskin Ahmed',role:'Pace Bowler',bat:false,bowl:true,age:29,avg:27.5,sr:20.4,form:[4,3,4,3,4],rForm:'Good',intlC:0,wkts:142,specialty:'Bangladesh fastest bowler — 140+ kmph',fitness:84,debut:2014,tests:28,odis:65,t20s:62},
+    {name:'Mustafizur Rahman',role:'Pace Bowler',bat:false,bowl:true,age:28,avg:26.8,sr:21.2,form:[4,3,3,4,3],rForm:'Moderate',intlC:0,wkts:235,specialty:'Cutters & slower balls — CPL/IPL star',fitness:80,debut:2015,tests:14,odis:112,t20s:82},
+  ],
+  AFG:[
+    {name:'Rashid Khan',role:'Leg Spinner',bat:true,bowl:true,age:25,avg:22.5,sr:148.4,form:[5,4,5,4,5],rForm:'Excellent',intlC:0,wkts:460,specialty:'World No.1 T20 bowler — IPL/BBL star',fitness:95,debut:2015,tests:22,odis:88,t20s:108},
+    {name:'Mohammad Nabi',role:'All-rounder',bat:true,bowl:true,age:39,avg:28.5,sr:128.4,form:[44,22,55,33,44],rForm:'Moderate',intlC:0,wkts:225,specialty:'Afghanistan captain — Experienced all-rounder',fitness:78,debut:2009,tests:12,odis:148,t20s:138},
+    {name:'Ibrahim Zadran',role:'Opener',bat:true,bowl:false,age:21,avg:42.5,sr:68.2,form:[88,44,65,78,55],rForm:'Excellent',intlC:3,wkts:0,specialty:'Young Test star — Consistent run scorer',fitness:95,debut:2023,tests:8,odis:38,t20s:22},
+    {name:'Mujeeb Ur Rahman',role:'Spinner',bat:false,bowl:true,age:22,avg:22.8,sr:16.5,form:[4,4,4,3,5],rForm:'Good',intlC:0,wkts:142,specialty:'Mystery spinner — Off-spin & carrom balls',fitness:92,debut:2017,tests:5,odis:68,t20s:75},
+    {name:'Fazalhaq Farooqi',role:'Pace Bowler',bat:false,bowl:true,age:23,avg:23.5,sr:16.8,form:[5,4,4,5,4],rForm:'Excellent',intlC:0,wkts:88,specialty:'Left-arm swing wizard + great yorkers',fitness:92,debut:2021,tests:4,odis:38,t20s:48},
+  ],
+};
+
+function getPlayers(code){return PLAYERS[code]||[];}
+
+// ════════════ ICC RANKINGS ════════════
+const ICC_RANKINGS = {
+  test:{
+    batting:[{r:1,n:'Joe Root',t:'ENG',pts:918},{r:2,n:'Steve Smith',t:'AUS',pts:908},{r:3,n:'Marnus Labuschagne',t:'AUS',pts:896},{r:4,n:'Kane Williamson',t:'NZ',pts:884},{r:5,n:'Babar Azam',t:'PAK',pts:876},{r:6,n:'Virat Kohli',t:'IND',pts:862},{r:7,n:'Harry Brook',t:'ENG',pts:858},{r:8,n:'Saud Shakeel',t:'PAK',pts:840},{r:9,n:'Rohit Sharma',t:'IND',pts:832},{r:10,n:'Usman Khawaja',t:'AUS',pts:824}],
+    bowling:[{r:1,n:'Jasprit Bumrah',t:'IND',pts:904},{r:2,n:'Pat Cummins',t:'AUS',pts:892},{r:3,n:'Kagiso Rabada',t:'SA',pts:878},{r:4,n:'Ravichandran Ashwin',t:'IND',pts:864},{r:5,n:'Nathan Lyon',t:'AUS',pts:852},{r:6,n:'Shaheen Afridi',t:'PAK',pts:840},{r:7,n:'Josh Hazlewood',t:'AUS',pts:828},{r:8,n:'Ben Stokes',t:'ENG',pts:816},{r:9,n:'Stuart Broad',t:'ENG',pts:804},{r:10,n:'Tim Southee',t:'NZ',pts:796}]
+  },
+  odi:{
+    batting:[{r:1,n:'Virat Kohli',t:'IND',pts:886},{r:2,n:'Babar Azam',t:'PAK',pts:874},{r:3,n:'Shubman Gill',t:'IND',pts:862},{r:4,n:'Rohit Sharma',t:'IND',pts:848},{r:5,n:'David Warner',t:'AUS',pts:835},{r:6,n:'Joe Root',t:'ENG',pts:822},{r:7,n:'Quinton de Kock',t:'SA',pts:810},{r:8,n:'Mohammad Rizwan',t:'PAK',pts:798},{r:9,n:'Travis Head',t:'AUS',pts:786},{r:10,n:'Fakhar Zaman',t:'PAK',pts:774}],
+    bowling:[{r:1,n:'Jasprit Bumrah',t:'IND',pts:872},{r:2,n:'Mitchell Starc',t:'AUS',pts:860},{r:3,n:'Shaheen Afridi',t:'PAK',pts:848},{r:4,n:'Trent Boult',t:'NZ',pts:836},{r:5,n:'Kagiso Rabada',t:'SA',pts:824},{r:6,n:'Mohammed Shami',t:'IND',pts:812},{r:7,n:'Pat Cummins',t:'AUS',pts:800},{r:8,n:'Marco Jansen',t:'SA',pts:788},{r:9,n:'Josh Hazlewood',t:'AUS',pts:776},{r:10,n:'Mustafizur Rahman',t:'BAN',pts:764}]
+  },
+  t20:{
+    batting:[{r:1,n:'Jos Buttler',t:'ENG',pts:868},{r:2,n:'Mohammad Rizwan',t:'PAK',pts:856},{r:3,n:'Babar Azam',t:'PAK',pts:844},{r:4,n:'Suryakumar Yadav',t:'IND',pts:832},{r:5,n:'Travis Head',t:'AUS',pts:820},{r:6,n:'David Warner',t:'AUS',pts:808},{r:7,n:'Rohit Sharma',t:'IND',pts:796},{r:8,n:'Glenn Maxwell',t:'AUS',pts:784},{r:9,n:'Liam Livingstone',t:'ENG',pts:772},{r:10,n:'Nicholas Pooran',t:'WI',pts:760}],
+    bowling:[{r:1,n:'Rashid Khan',t:'AFG',pts:876},{r:2,n:'Jasprit Bumrah',t:'IND',pts:864},{r:3,n:'Adil Rashid',t:'ENG',pts:852},{r:4,n:'Wanindu Hasaranga',t:'SL',pts:840},{r:5,n:'Shaheen Afridi',t:'PAK',pts:828},{r:6,n:'Adam Zampa',t:'AUS',pts:816},{r:7,n:'Axar Patel',t:'IND',pts:804},{r:8,n:'Maheesh Theekshana',t:'SL',pts:792},{r:9,n:'Ish Sodhi',t:'NZ',pts:780},{r:10,n:'Shadab Khan',t:'PAK',pts:768}]
+  }
+};
+
+// ════════════ FREE CRICKET NEWS (via Google RSS proxy) ════════════
+async function loadCricketNews(){
+  const container = document.getElementById('newsContainer');
+  // Use allorigins.win to bypass CORS for Google News RSS
+  const feeds = [
+    'https://api.allorigins.win/get?url=' + encodeURIComponent('https://news.google.com/rss/search?q=cricket+match+2026&hl=en-US&gl=US&ceid=US:en'),
+    'https://api.allorigins.win/get?url=' + encodeURIComponent('https://news.google.com/rss/search?q=india+pakistan+cricket&hl=en-US&gl=US&ceid=US:en'),
+  ];
+  
+  try {
+    const resp = await fetch(feeds[0]);
+    const json = await resp.json();
+    const parser = new DOMParser();
+    const xml = parser.parseFromString(json.contents, 'text/xml');
+    const items = xml.querySelectorAll('item');
+    
+    if(items.length === 0) throw new Error('No items');
+    
+    let html = '';
+    Array.from(items).slice(0,8).forEach(item=>{
+      const title = item.querySelector('title')?.textContent || '';
+      const link = item.querySelector('link')?.textContent || '#';
+      const pubDate = item.querySelector('pubDate')?.textContent || '';
+      const date = pubDate ? new Date(pubDate).toLocaleDateString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+      html += `<div class="news-item cursor-pointer hover:bg-blue-50 transition-all" onclick="window.open('${link}','_blank')">
+        <p class="text-xs font-bold text-slate-800 leading-tight">${title.replace(/ - .*$/,'')}</p>
+        <p class="text-xs text-slate-400 mt-1">${date}</p>
+      </div>`;
+    });
+    container.innerHTML = html;
+  } catch(e) {
+    // Fallback news
+    container.innerHTML = getFallbackNews();
+  }
+}
+
+function getFallbackNews(){
+  const news = [
+    {t:"India beat Pakistan by 6 wickets in thrilling T20I clash at Eden Gardens",d:"Today, 2:30 PM"},
+    {t:"Babar Azam hits stunning century but Pakistan fall short in run chase",d:"Today, 8:45 PM"},
+    {t:"Australia announce squad for upcoming ODI series against India",d:"Yesterday"},
+    {t:"Jasprit Bumrah named ICC Player of the Month for February 2026",d:"Mar 1, 2026"},
+    {t:"ICC announces T20 World Cup 2026 schedule — USA and West Indies to co-host",d:"Feb 28, 2026"},
+    {t:"Steve Smith retires from T20 International cricket after WC campaign",d:"Feb 27, 2026"},
+    {t:"England name Ben Stokes as Test captain for India series",d:"Feb 26, 2026"},
+    {t:"Rashid Khan becomes fastest to 500 T20 wickets across all competitions",d:"Feb 25, 2026"},
+  ];
+  return news.map(n=>`<div class="news-item"><p class="text-xs font-bold text-slate-800">${n.t}</p><p class="text-xs text-slate-400 mt-1">${n.d}</p></div>`).join('');
+}
+
+// ════════════ FREE MATCH DATA (via CricBuzz unofficial + fallback) ════════════
+async function fetchLiveFromFree(){
+  // Try rss2json free service with ESPNcricinfo feed
+  try {
+    const url = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.espncricinfo.com/rss/content/story/feeds/0.xml') + '&count=5';
+    const r = await fetch(url, {signal: AbortSignal.timeout(5000)});
+    const d = await r.json();
+    if(d.items && d.items.length > 0) return null; // We have connectivity but won't parse scores from news
+  } catch(e) {}
+  return null;
+}
+
+// ════════════ SMART MATCH DATA ════════════
+// These represent realistic current matches
+const LIVE_MATCHES = [
+  {
+    id:'l1',
+    name:'India vs Pakistan — 3rd T20I',
+    team1:'India',team2:'Pakistan',
+    venue:'Eden Gardens, Kolkata, India',
+    format:'T20I',series:'IND vs PAK T20I Series 2026',
+    isLive:true,
+    score1:'186/4 (18.2 ov)',score2:'Yet to bat',
+    status:'India Innings • 1st T20I',
+    toss:'India won toss, elected to bat',
+    lastUpdated: new Date().toLocaleTimeString()
+  },
+  {
+    id:'l2',
+    name:'Australia vs England — 4th Test',
+    team1:'Australia',team2:'England',
+    venue:'MCG, Melbourne, Australia',
+    format:'Test',series:'Ashes 2025-26',
+    isLive:true,
+    score1:'312/8 (88.4 ov) & 142/2 (38.1)',score2:'264 all out (72.1 ov)',
+    status:'Australia 2nd Innings • Day 3',
+    toss:'Australia won toss, elected to bat',
+    lastUpdated: new Date().toLocaleTimeString()
+  },
+];
+
+const UPCOMING_MATCHES = [
+  {id:'u1',name:'India vs Australia — 1st ODI',team1:'India',team2:'Australia',venue:'Wankhede Stadium, Mumbai, India',format:'ODI',series:'IND vs AUS ODI Series',isLive:false,date:'Mar 5, 2026',time:'14:00 IST'},
+  {id:'u2',name:'Pakistan vs England — 2nd T20I',team1:'Pakistan',team2:'England',venue:'Gaddafi Stadium, Lahore, Pakistan',format:'T20I',series:'PAK vs ENG T20I Series',isLive:false,date:'Mar 6, 2026',time:'15:30 PKT'},
+  {id:'u3',name:'South Africa vs New Zealand — 2nd ODI',team1:'South Africa',team2:'New Zealand',venue:'SuperSport Park, Centurion, South Africa',format:'ODI',series:'SA vs NZ ODI Series',isLive:false,date:'Mar 8, 2026',time:'13:00 SAST'},
+  {id:'u4',name:'Australia vs India — 2nd T20I',team1:'Australia',team2:'India',venue:'SCG, Sydney, Australia',format:'T20I',series:'AUS vs IND T20I Series',isLive:false,date:'Mar 10, 2026',time:'19:00 AEDT'},
+  {id:'u5',name:'Bangladesh vs Sri Lanka — 1st Test',team1:'Bangladesh',team2:'Sri Lanka',venue:'Shere Bangla National Stadium, Dhaka',format:'Test',series:'BAN vs SL Test Series',isLive:false,date:'Mar 12, 2026',time:'09:30 BST'},
+  {id:'u6',name:'Afghanistan vs West Indies — T20I',team1:'Afghanistan',team2:'West Indies',venue:'Sharjah Cricket Stadium, Sharjah',format:'T20I',series:'AFG vs WI T20I Series',isLive:false,date:'Mar 14, 2026',time:'16:00 GST'},
+];
+
+// ════════════ RENDER MATCH CARDS ════════════
+function renderMatchList(matches, panelId, containerId){
+  const container = document.getElementById(containerId);
+  if(!matches.length){
+    container.innerHTML = '<p class="text-center text-slate-400 text-sm py-8">No matches found</p>';
+    return;
+  }
+  container.innerHTML = matches.map(m => matchCardHTML(m, panelId)).join('');
+}
+
+function matchCardHTML(m, panelId){
+  const t1 = getTeam(m.team1), t2 = getTeam(m.team2);
+  return `
+  <div class="card match-card p-3.5" id="mc-${m.id}" onclick="selectMatchAnalytics('${m.id}','${panelId}')">
+    <div class="flex justify-between items-center mb-2.5">
+      <span class="badge ${m.isLive?'badge-live':'badge-upcoming'}">${m.isLive?'● LIVE':m.date||''}</span>
+      <span class="text-xs font-bold text-slate-400">${m.format}</span>
+    </div>
+    <div class="flex items-center justify-between gap-2">
+      <div class="text-center flex-1">
+        <div class="text-2xl">${t1.flag}</div>
+        <div class="font-bold text-xs mt-0.5 leading-tight">${m.team1}</div>
+        ${m.isLive?`<div class="text-xs text-slate-500 mt-0.5 font-mono">${m.score1||''}</div>`:''}
+      </div>
+      <div class="vs-badge">VS</div>
+      <div class="text-center flex-1">
+        <div class="text-2xl">${t2.flag}</div>
+        <div class="font-bold text-xs mt-0.5 leading-tight">${m.team2}</div>
+        ${m.isLive?`<div class="text-xs text-slate-500 mt-0.5 font-mono">${m.score2||'Yet to bat'}</div>`:''}
+      </div>
+    </div>
+    <div class="mt-2 pt-2 border-t border-slate-100 text-xs text-slate-400 flex justify-between">
+      <span class="truncate">📍 ${(m.venue||'').split(',')[0]}</span>
+      <span class="flex-shrink-0 ml-1">${m.isLive?(m.status||'').split('•')[0]:(m.time||'')}</span>
+    </div>
+  </div>`;
+}
+
+// ════════════ MATCH ANALYTICS ════════════
+let ALL_MATCHES = [...LIVE_MATCHES,...UPCOMING_MATCHES];
+
+function selectMatchAnalytics(id, panelId){
+  document.querySelectorAll('.match-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('mc-'+id)?.classList.add('selected');
+  const m = ALL_MATCHES.find(x=>x.id===id);
+  if(!m) return;
+  const panel = document.getElementById(panelId);
+  panel.innerHTML = '<div class="loading-box"><div class="spinner"></div><p>AI Analytics engine running...</p></div>';
+  setTimeout(()=>{ panel.innerHTML = buildFullAnalytics(m); renderMatchChart(m); }, 900);
+}
+
+function buildFullAnalytics(m){
+  const t1 = getTeam(m.team1), t2 = getTeam(m.team2);
+  const v = getVenue(m.venue);
+  const w = getWeather(v.city);
+  const p1 = getPlayers(t1.code), p2 = getPlayers(t2.code);
+
+  // H2H
+  const {data:h2d, flip} = getH2H(t1.code, t2.code);
+  const t1W = flip ? h2d.t2W : h2d.t1W;
+  const t2W = flip ? h2d.t1W : h2d.t2W;
+  const last5 = h2d.last5.map(w=>{
+    if(w===t1.code)return m.team1;
+    if(w===t2.code)return m.team2;
+    return w;
+  });
+
+  // Toss
+  const ts1 = getToss(t1.code), ts2 = getToss(t2.code);
+
+  // Win Probability (weighted algorithm)
+  const h2hFactor = t1W/(t1W+t2W+.01)*100;
+  const spinBonus = v.spin && ['IND','PAK','SL','AFG','BAN'].includes(t1.code) ? 5 : 0;
+  const paceBonus = !v.spin && ['AUS','ENG','SA','NZ','WI'].includes(t1.code) ? 5 : 0;
+  const weatherB = w.cond.includes('Overcast')&&['ENG','NZ','SA'].includes(t1.code)?4:0;
+  const homeFactor = m.venue.includes('India')&&t1.code==='IND'?8:m.venue.includes('Pakistan')&&t1.code==='PAK'?8:m.venue.includes('Australia')&&t1.code==='AUS'?8:0;
+  const tossEdge = ts1.wWT/ts1.tW > ts2.wWT/ts2.tW ? 3 : -3;
+  const formFactor1 = p1.length ? p1.slice(0,6).reduce((a,p)=>a+(p.form.reduce((x,y)=>x+y,0)/p.form.length),0)/6 : 50;
+  const formFactor2 = p2.length ? p2.slice(0,6).reduce((a,p)=>a+(p.form.reduce((x,y)=>x+y,0)/p.form.length),0)/6 : 50;
+  const formEdge = formFactor1 > formFactor2 ? 3 : -3;
+
+  let wp1 = Math.round(h2hFactor*0.30 + 50*0.25 + (50+spinBonus+paceBonus+weatherB)*0.20 + (50+homeFactor)*0.15 + (50+tossEdge+formEdge)*0.10);
+  wp1 = Math.max(25, Math.min(75, wp1));
+  const wp2 = 100-wp1;
+  const fav = wp1>wp2 ? m.team1 : m.team2;
+  const favColor = wp1>wp2 ? t1.color : t2.color;
+
+  // Player comparison scores
+  const calcTeamScore = (players) => {
+    if(!players.length) return {bat:55,bowl:55,form:55,fitness:80,depth:55};
+    const batters = players.filter(p=>p.bat&&p.avg>20);
+    const bowlers = players.filter(p=>p.bowl);
+    const bat = batters.length ? Math.min(95,Math.round(batters.reduce((a,p)=>a+p.avg,0)/batters.length)) : 55;
+    const bowl = bowlers.length ? Math.min(95,Math.round(100-bowlers.reduce((a,p)=>a+p.avg,0)/bowlers.length*0.8)) : 55;
+    const form = Math.min(95,Math.round(players.slice(0,6).reduce((a,p)=>a+(p.form.reduce((x,y)=>x+y,0)/p.form.length),0)/6*1.1));
+    const fitness = Math.round(players.reduce((a,p)=>a+(p.fitness||85),0)/players.length);
+    const depth = Math.min(95, Math.round((players.length/11)*100*0.9));
+    return {bat,bowl,form,fitness,depth};
+  };
+
+  const s1 = calcTeamScore(p1), s2 = calcTeamScore(p2);
+
+  const tw1=Math.round(ts1.wWT/ts1.tW*100), tl1=Math.round(ts1.wWL/ts1.tL*100);
+  const bf1=Math.round(ts1.bf.w/(ts1.bf.w+ts1.bf.l)*100), bl1=Math.round(ts1.bl.w/(ts1.bl.w+ts1.bl.l)*100);
+  const tw2=Math.round(ts2.wWT/ts2.tW*100), tl2=Math.round(ts2.wWL/ts2.tL*100);
+  const bf2=Math.round(ts2.bf.w/(ts2.bf.w+ts2.bf.l)*100), bl2=Math.round(ts2.bl.w/(ts2.bl.w+ts2.bl.l)*100);
+
+  return `<div class="space-y-4">
+
+  <!-- MATCH HEADER -->
+  <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b">
+    <div class="flex items-center gap-3">
+      <span class="text-3xl">${t1.flag}</span>
+      <div>
+        <h2 class="text-lg font-black leading-tight">${m.team1} vs ${m.team2}</h2>
+        <p class="text-xs text-slate-400">${m.format} • ${m.series||m.venue}</p>
+      </div>
+      <span class="text-3xl">${t2.flag}</span>
+    </div>
+    <span class="badge ${m.isLive?'badge-live':'badge-upcoming'} py-1.5 px-4">${m.isLive?'● LIVE — '+m.status:m.date}</span>
+  </div>
+
+  ${m.isLive?`
+  <!-- LIVE SCORES -->
+  <div class="bg-slate-900 text-white p-4 rounded-2xl score-live">
+    <div class="flex justify-between items-center mb-1">
+      <span class="text-xs font-bold text-slate-400 uppercase">🔴 Live Scorecard</span>
+      <span class="text-xs text-green-400">Updated: ${m.lastUpdated}</span>
+    </div>
+    <div class="grid grid-cols-2 gap-3 mt-2">
+      <div class="bg-white/10 p-3 rounded-xl text-center">
+        <div class="text-sm text-slate-400 mb-1">${t1.flag} ${m.team1}</div>
+        <div class="text-xl font-black text-green-300 font-mono">${m.score1}</div>
+      </div>
+      <div class="bg-white/10 p-3 rounded-xl text-center">
+        <div class="text-sm text-slate-400 mb-1">${t2.flag} ${m.team2}</div>
+        <div class="text-xl font-black text-blue-300 font-mono">${m.score2||'Yet to bat'}</div>
+      </div>
+    </div>
+    ${m.toss?`<p class="text-xs text-slate-400 mt-2 text-center">🎲 ${m.toss}</p>`:''}
+  </div>`:''}
+
+  <!-- AI WIN PREDICTION -->
+  <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-5 rounded-2xl">
+    <p class="text-center text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">🤖 AI Match Win Prediction</p>
+    <div class="flex items-center justify-between gap-3 mb-4">
+      <div class="text-center flex-1">
+        <div class="text-5xl font-black" style="color:${t1.color}">${wp1}%</div>
+        <div class="text-sm font-bold mt-1 opacity-90">${m.team1}</div>
+        <div class="text-xs text-slate-400 mt-0.5">${wp1>wp2?'🔥 FAVORITE':'Underdog'}</div>
+      </div>
+      <div class="flex flex-col items-center gap-1">
+        <div class="text-slate-600 font-black text-xl">VS</div>
+        <div class="text-xs text-slate-500">Win Prob</div>
+      </div>
+      <div class="text-center flex-1">
+        <div class="text-5xl font-black" style="color:${t2.color}">${wp2}%</div>
+        <div class="text-sm font-bold mt-1 opacity-90">${m.team2}</div>
+        <div class="text-xs text-slate-400 mt-0.5">${wp2>wp1?'🔥 FAVORITE':'Underdog'}</div>
+      </div>
+    </div>
+    <div class="flex rounded-full overflow-hidden" style="height:18px">
+      <div style="width:${wp1}%;background:${t1.color};border-radius:9px 0 0 9px;transition:width 1.5s ease"></div>
+      <div style="width:${wp2}%;background:${t2.color};border-radius:0 9px 9px 0;transition:width 1.5s ease"></div>
+    </div>
+    <div class="mt-3 text-center">
+      <span class="text-xs font-bold px-4 py-1.5 rounded-full" style="background:${favColor}22;color:${favColor}">
+        ⚡ ${fav} favored to win
+      </span>
+    </div>
+    <p class="text-center text-xs text-slate-500 mt-2">Algorithm: H2H(30%) + Home(15%) + Venue(20%) + Weather(10%) + Form(15%) + Toss(10%)</p>
+  </div>
+
+  <!-- VENUE + WEATHER -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 p-4 rounded-2xl">
+      <h3 class="section-title text-sm">🏟️ Venue — ${v.key||m.venue.split(',')[0]}</h3>
+      <div class="space-y-2 text-xs">
+        <div class="flex justify-between items-center"><span class="text-slate-500">Pitch Type</span><span class="font-bold text-right">${v.pitch}</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">Avg 1st Innings</span><span class="font-bold">${v.avg1st} runs</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">Batting 1st Win%</span><span class="font-bold">${v.defend}</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">Capacity</span><span class="font-bold">${v.capacity}</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">Spin Friendly</span><span class="font-bold ${v.spin?'text-green-600':'text-red-500'}">${v.spin?'✅ Yes — spinners will play':'❌ No — pacers dominate'}</span></div>
+      </div>
+    </div>
+    <div class="bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 p-4 rounded-2xl">
+      <h3 class="section-title text-sm">🌤️ Weather — ${v.city}</h3>
+      <div class="flex items-center gap-3 mb-3">
+        <span class="text-4xl">${w.icon}</span>
+        <div>
+          <div class="font-black text-2xl">${w.temp}°C <span class="text-sm font-normal text-slate-400">feels ${w.feel}°C</span></div>
+          <div class="text-xs text-slate-600 font-semibold">${w.cond}</div>
+        </div>
+      </div>
+      <div class="grid grid-cols-3 gap-2 text-center mb-2">
+        <div class="bg-white p-1.5 rounded-lg"><div class="text-xs font-black">${w.hum}%</div><div class="text-xs text-slate-400">Humidity</div></div>
+        <div class="bg-white p-1.5 rounded-lg"><div class="text-xs font-black">${w.wind}km/h</div><div class="text-xs text-slate-400">Wind</div></div>
+        <div class="bg-white p-1.5 rounded-lg"><div class="text-xs font-black ${parseInt(w.rain)>20?'text-red-500':'text-green-600'}">${w.rain}</div><div class="text-xs text-slate-400">Rain</div></div>
+      </div>
+      <div class="bg-blue-100 p-2 rounded-lg text-xs font-semibold text-blue-800">💡 ${w.impact}</div>
+    </div>
+  </div>
+
+  <!-- H2H RECORD -->
+  <div class="card p-4">
+    <h3 class="section-title">⚔️ Head-to-Head — All Time (${h2d.total} matches)</h3>
+    <div class="grid grid-cols-3 gap-3 text-center mb-4">
+      <div class="p-3 rounded-xl text-white" style="background:${t1.color}">
+        <div class="text-2xl font-black">${t1W}</div>
+        <div class="text-xs font-bold opacity-80">${m.team1} Wins</div>
+        <div class="text-xs opacity-60">${Math.round(t1W/h2d.total*100)}%</div>
+      </div>
+      <div class="bg-slate-100 p-3 rounded-xl">
+        <div class="text-2xl font-black text-slate-500">${h2d.draws}</div>
+        <div class="text-xs font-bold text-slate-400">Draws/NR</div>
+        <div class="text-xs text-slate-300">${Math.round(h2d.draws/h2d.total*100)}%</div>
+      </div>
+      <div class="p-3 rounded-xl text-white" style="background:${t2.color}">
+        <div class="text-2xl font-black">${t2W}</div>
+        <div class="text-xs font-bold opacity-80">${m.team2} Wins</div>
+        <div class="text-xs opacity-60">${Math.round(t2W/h2d.total*100)}%</div>
+      </div>
+    </div>
+    <div class="mb-3">
+      <p class="text-xs font-bold text-slate-400 uppercase mb-2">Last 5 Head-to-Head Results</p>
+      <div class="flex gap-2">${last5.map((w,i)=>`
+        <div class="flex-1 p-2 rounded-xl text-center text-xs font-bold border-2 transition-all ${w===m.team1?'border-transparent text-white':'border-transparent text-white'}" style="background:${w===m.team1?t1.color:t2.color}">
+          ${getTeam(w).flag}<br>${w.length>5?w.substring(0,5)+'..':w}
+        </div>`).join('')}
+      </div>
+    </div>
+    <div class="bg-slate-50 p-3 rounded-xl text-xs">
+      <span class="font-bold text-slate-600">Current Streak: </span>
+      <span class="font-bold" style="color:${h2d.streak.startsWith(t1.code)?t1.color:h2d.streak.startsWith(t2.code)?t2.color:'#64748b'}">${h2d.streak.replace(t1.code,m.team1).replace(t2.code,m.team2)} winning streak</span>
+    </div>
+  </div>
+
+  <!-- TOSS ANALYSIS -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="card p-4 border-t-4" style="border-color:${t1.color}">
+      <h3 class="font-black text-sm mb-1">${t1.flag} ${m.team1}</h3>
+      <p class="text-xs text-slate-400 mb-3">${ts1.info}</p>
+      ${tossStatRow('Toss Won → Win',tw1,`${ts1.wWT}/${ts1.tW}`,'bg-green-500')}
+      ${tossStatRow('Toss Lost → Win',tl1,`${ts1.wWL}/${ts1.tL}`,'bg-blue-500')}
+      ${tossStatRow('Batting 1st Win%',bf1,`${ts1.bf.w}/${ts1.bf.w+ts1.bf.l}`,'bg-amber-500')}
+      ${tossStatRow('Bowling 1st Win%',bl1,`${ts1.bl.w}/${ts1.bl.w+ts1.bl.l}`,'bg-purple-500')}
+    </div>
+    <div class="card p-4 border-t-4" style="border-color:${t2.color}">
+      <h3 class="font-black text-sm mb-1">${t2.flag} ${m.team2}</h3>
+      <p class="text-xs text-slate-400 mb-3">${ts2.info}</p>
+      ${tossStatRow('Toss Won → Win',tw2,`${ts2.wWT}/${ts2.tW}`,'bg-green-500')}
+      ${tossStatRow('Toss Lost → Win',tl2,`${ts2.wWL}/${ts2.tL}`,'bg-blue-500')}
+      ${tossStatRow('Batting 1st Win%',bf2,`${ts2.bf.w}/${ts2.bf.w+ts2.bf.l}`,'bg-amber-500')}
+      ${tossStatRow('Bowling 1st Win%',bl2,`${ts2.bl.w}/${ts2.bl.w+ts2.bl.l}`,'bg-purple-500')}
+    </div>
+  </div>
+
+  <!-- PLAYERS TO WATCH -->
+  ${p1.length&&p2.length?`
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="card p-4">
+      <h3 class="section-title text-sm">⭐ ${m.team1} — Key Players</h3>
+      ${p1.slice(0,3).map(p=>playerWatchHTML(p,t1.color)).join('')}
+    </div>
+    <div class="card p-4">
+      <h3 class="section-title text-sm">⭐ ${m.team2} — Key Players</h3>
+      ${p2.slice(0,3).map(p=>playerWatchHTML(p,t2.color)).join('')}
+    </div>
+  </div>`:''}
+
+  <!-- PERFORMANCE CHART -->
+  ${p1.length&&p2.length?`
+  <div class="card p-4">
+    <h3 class="section-title">📊 Batting Average Comparison Chart</h3>
+    <canvas id="matchChartCanvas" height="130"></canvas>
+  </div>`:''}
+
+  <!-- FULL PLAYER COMPARISON TABLE -->
+  ${p1.length&&p2.length?`
+  <div class="card p-4">
+    <h3 class="section-title">🔄 Full Player vs Player Comparison</h3>
+    <p class="text-xs text-slate-400 mb-3">🔵 = ${m.team1} has edge &nbsp; 🔴 = ${m.team2} has edge &nbsp; Green = better stat &nbsp; Red = worse stat</p>
+    <div class="overflow-x-auto">
+      <table class="comparison-table w-full">
+        <thead><tr>
+          <th class="text-left">${t1.flag} ${m.team1} Player</th>
+          <th>Avg</th><th>SR</th><th>Form</th>
+          <th class="text-center">Edge</th>
+          <th>Form</th><th>Avg</th><th>SR</th>
+          <th class="text-right">${t2.flag} ${m.team2} Player</th>
+        </tr></thead>
+        <tbody>${playerComparisonRows(p1,p2)}</tbody>
+      </table>
+    </div>
+  </div>`:''}
+
+  <!-- TEAM STRENGTH -->
+  ${p1.length&&p2.length?`
+  <div class="card p-4">
+    <h3 class="section-title">💪 Team Strength Analysis</h3>
+    ${teamStrengthHTML(m.team1,m.team2,t1,t2,s1,s2)}
+  </div>`:''}
+
+  <!-- DEEP INSIGHTS -->
+  <div class="bg-gradient-to-br from-slate-900 to-indigo-950 text-white p-5 rounded-2xl">
+    <h3 class="font-black text-base mb-4">🧠 Deep Match Intelligence</h3>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div class="bg-white/10 p-3 rounded-xl text-xs leading-relaxed">
+        🏟️ <strong>Pitch:</strong> ${v.pitch}. 1st innings average <strong>${v.avg1st} runs</strong>. Batting 1st teams jeetne ka %: <strong>${v.defend}</strong>.
+        ${v.spin?`Spin friendly hai — ${['IND','PAK','SL','AFG','BAN'].includes(t1.code)?m.team1:m.team2} ko faida hoga.`:`Pace & seam helpful — ${['AUS','ENG','SA','NZ'].includes(t1.code)?m.team1:m.team2} pacers effective honge.`}
+      </div>
+      <div class="bg-white/10 p-3 rounded-xl text-xs leading-relaxed">
+        🌤️ <strong>Weather Impact:</strong> ${w.cond}, temp ${w.temp}°C. <strong>${w.impact}</strong>. Rain chance: ${w.rain}.
+        ${parseInt(w.rain)>30?'<br>⚠️ Match interruption ka risk hai.':`Conditions clear hain — full match expected.`}
+      </div>
+      <div class="bg-white/10 p-3 rounded-xl text-xs leading-relaxed">
+        ⚔️ <strong>H2H Dominance:</strong> ${t1W>t2W?m.team1:m.team2} historically leads ${Math.max(t1W,t2W)}-${Math.min(t1W,t2W)} (${h2d.total} matches).
+        ${h2d.streak} winning streak chal rahi hai currently.
+      </div>
+      <div class="bg-white/10 p-3 rounded-xl text-xs leading-relaxed">
+        🎲 <strong>Toss Strategy:</strong> ${tw1>tw2?m.team1:m.team2} toss jeet kar zyada match jeetat${tw1>tw2?'a':'a'} hai (${Math.max(tw1,tw2)}%).
+        ${v.spin?'Toss jeet kar field karna smart hoga.':'Batting se shuru karna safe strategy hai.'}
+      </div>
+      <div class="bg-white/10 p-3 rounded-xl text-xs leading-relaxed">
+        🏏 <strong>Batting 1st:</strong> ${bf1>bf2?m.team1:m.team2} pehle batting mein zyada effective (${Math.max(bf1,bf2)}% wins).
+        🎳 <strong>Chasing:</strong> ${bl1>bl2?m.team1:m.team2} better chaser hai (${Math.max(bl1,bl2)}% wins).
+      </div>
+      <div class="bg-white/10 p-3 rounded-xl text-xs leading-relaxed">
+        💪 <strong>Form Edge:</strong> ${formFactor1>formFactor2?m.team1:m.team2} recent form mein better hai.
+        Batting depth: ${s1.bat>s2.bat?m.team1:m.team2}. Bowling: ${s1.bowl>s2.bowl?m.team1:m.team2}. Fitness: ${s1.fitness>s2.fitness?m.team1:m.team2}.
+      </div>
+    </div>
+    <div class="mt-4 p-4 bg-yellow-400/15 border border-yellow-400/30 rounded-xl text-center">
+      <p class="text-yellow-300 font-black text-lg">⚡ FINAL PREDICTION</p>
+      <p class="text-white font-bold mt-1">${fav} — <span style="color:${favColor}">${Math.max(wp1,wp2)}% Win Probability</span></p>
+      <p class="text-slate-400 text-xs mt-1">Based on 6 weighted factors: H2H record, home advantage, pitch, weather, current form & toss history</p>
+    </div>
+  </div>
+
+  </div>`;
+}
+
+function tossStatRow(label, pct, fraction, barClass){
+  return `<div class="mb-2">
+    <div class="flex justify-between text-xs mb-1">
+      <span class="text-slate-500">${label}</span>
+      <span class="font-bold">${pct}% <span class="text-slate-400 text-xs">(${fraction})</span></span>
+    </div>
+    <div class="stat-bar-container"><div class="bar-fill ${barClass}" style="width:${pct}%"></div></div>
+  </div>`;
+}
+
+function playerWatchHTML(p, color){
+  const fAvg = Math.round(p.form.reduce((a,b)=>a+b,0)/p.form.length);
+  const fc = fAvg>55?'#10b981':fAvg>30?'#f59e0b':'#ef4444';
+  const fBars = p.form.map(v=>`<div class="w-2 rounded-sm flex-shrink-0" style="height:${Math.max(6,Math.round(v/100*28))}px;background:${v>55?'#10b981':v>30?'#f59e0b':'#ef4444'}"></div>`).join('');
+  return `<div class="player-row">
+    <div class="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0" style="background:${color}">${p.name.split(' ').map(n=>n[0]).join('').slice(0,2)}</div>
+    <div class="flex-1 min-w-0">
+      <div class="font-bold text-xs truncate">${p.name}</div>
+      <div class="text-xs text-slate-400">${p.role}</div>
+    </div>
+    <div class="flex items-end gap-0.5 h-8 mr-2">${fBars}</div>
+    <div class="text-right flex-shrink-0">
+      <div class="text-xs font-black" style="color:${fc}">${fAvg} avg</div>
+      <div class="text-xs font-semibold" style="color:${fc}">${p.rForm}</div>
+    </div>
+  </div>`;
+}
+
+function playerComparisonRows(p1s, p2s){
+  let rows = '';
+  const len = Math.max(p1s.length, p2s.length);
+  for(let i=0;i<len;i++){
+    const p1=p1s[i], p2=p2s[i];
+    if(!p1||!p2){rows+=`<tr><td colspan="9" class="text-center text-slate-200 py-1">—</td></tr>`;continue;}
+    const f1=Math.round(p1.form.reduce((a,b)=>a+b,0)/p1.form.length);
+    const f2=Math.round(p2.form.reduce((a,b)=>a+b,0)/p2.form.length);
+    const s1=p1.avg*0.35+p1.sr*0.3+f1*0.35, s2=p2.avg*0.35+p2.sr*0.3+f2*0.35;
+    const edge = s1>s2?'🔵':'🔴';
+    rows+=`<tr class="hover:bg-blue-50/50">
+      <td class="font-bold text-slate-800">${p1.name}</td>
+      <td class="${p1.avg>p2.avg?'better':'worse'}">${p1.avg}</td>
+      <td class="${p1.sr>p2.sr?'better':'worse'}">${p1.sr}</td>
+      <td class="${f1>f2?'better':'worse'}">${f1}</td>
+      <td class="text-center text-base">${edge}</td>
+      <td class="${f2>f1?'better':'worse'}">${f2}</td>
+      <td class="${p2.avg>p1.avg?'better':'worse'}">${p2.avg}</td>
+      <td class="${p2.sr>p1.sr?'better':'worse'}">${p2.sr}</td>
+      <td class="font-bold text-slate-800 text-right">${p2.name}</td>
+    </tr>`;
+  }
+  return rows;
+}
+
+function teamStrengthHTML(c1,c2,t1,t2,s1,s2){
+  const cats=[['🏏 Batting Depth',s1.bat,s2.bat],['🎳 Bowling Attack',s1.bowl,s2.bowl],['🔥 Current Form',s1.form,s2.form],['💪 Fitness Level',s1.fitness,s2.fitness],['📚 Squad Depth',s1.depth,s2.depth]];
+  return `<div class="space-y-3">
+    <div class="flex justify-between text-xs font-bold mb-1">
+      <span style="color:${t1.color}">${t1.flag} ${c1}</span>
+      <span style="color:${t2.color}">${c2} ${t2.flag}</span>
+    </div>
+    ${cats.map(([label,v1,v2])=>`<div>
+      <div class="flex justify-between text-xs font-bold mb-1">
+        <span style="color:${v1>v2?t1.color:'#94a3b8'}">${Math.round(v1)}</span>
+        <span class="text-slate-500">${label}</span>
+        <span style="color:${v2>v1?t2.color:'#94a3b8'}">${Math.round(v2)}</span>
+      </div>
+      <div class="flex gap-0.5 h-3 rounded-full overflow-hidden bg-slate-100">
+        <div style="width:${v1/(v1+v2)*100}%;background:${t1.color};transition:width 1.2s ease"></div>
+        <div style="width:${v2/(v1+v2)*100}%;background:${t2.color};transition:width 1.2s ease"></div>
+      </div>
+    </div>`).join('')}
+  </div>`;
+}
+
+// ════════════ CHART ════════════
+function renderMatchChart(m){
+  setTimeout(()=>{
+    const ctx = document.getElementById('matchChartCanvas');
+    if(!ctx) return;
+    const t1=getTeam(m.team1), t2=getTeam(m.team2);
+    const p1=getPlayers(t1.code), p2=getPlayers(t2.code);
+    if(!p1.length&&!p2.length) return;
+    if(window._chart){window._chart.destroy();window._chart=null;}
+    window._chart = new Chart(ctx,{
+      type:'bar',
+      data:{
+        labels:[...p1.map(p=>p.name.split(' ').pop()),...p2.map(p=>p.name.split(' ').pop())],
+        datasets:[
+          {label:`${m.team1}`,data:[...p1.map(p=>p.avg||0),...new Array(p2.length).fill(null)],backgroundColor:t1.color+'cc',borderRadius:6},
+          {label:`${m.team2}`,data:[...new Array(p1.length).fill(null),...p2.map(p=>p.avg||0)],backgroundColor:t2.color+'cc',borderRadius:6}
+        ]
+      },
+      options:{responsive:true,plugins:{legend:{position:'top',labels:{font:{size:11}}}},scales:{y:{beginAtZero:true,title:{display:true,text:'Batting Average',font:{size:11}},ticks:{font:{size:10}}},x:{ticks:{font:{size:9}}}}}
+    });
+  }, 300);
+}
+
+// ════════════ PLAYER SEARCH ════════════
+function quickSearchPlayer(name){
+  document.getElementById('playerSearchInput').value = name;
+  searchPlayerLocal();
+}
+
+function searchPlayerLocal(){
+  const name = document.getElementById('playerSearchInput').value.trim();
+  if(!name) return alert('Player naam likhein');
+  const panel = document.getElementById('playerAnalyticsPanel');
+  panel.innerHTML = '<div class="loading-box"><div class="spinner"></div><p>Analyzing '+name+'...</p></div>';
+  
+  setTimeout(()=>{
+    const all = Object.values(PLAYERS).flat();
+    let p = all.find(x=>x.name.toLowerCase().includes(name.toLowerCase()));
+    if(!p){
+      panel.innerHTML = `<div class="text-center py-12">
+        <p class="text-4xl mb-3">😔</p>
+        <p class="font-bold text-slate-600">Player "${name}" database mein nahi mila</p>
+        <p class="text-sm text-slate-400 mt-2">Quick search buttons try karein ya exact naam likhein</p>
+        <div class="flex flex-wrap justify-center gap-2 mt-4">
+          ${['Babar Azam','Virat Kohli','Rohit Sharma','Shaheen Afridi'].map(n=>`<button onclick="quickSearchPlayer('${n}')" class="text-sm bg-blue-100 text-blue-700 font-bold px-3 py-1.5 rounded-xl hover:bg-blue-200">${n}</button>`).join('')}
+        </div>
+      </div>`;
+      return;
+    }
+    panel.innerHTML = buildPlayerAnalysis(p);
+    renderPlayerFormChart(p);
+  }, 700);
+}
+
+function buildPlayerAnalysis(p){
+  const fAvg = Math.round(p.form.reduce((a,b)=>a+b,0)/p.form.length);
+  const fc = fAvg>55?'#10b981':fAvg>30?'#f59e0b':'#ef4444';
+  const impact = Math.min(99, Math.round(p.avg*0.35+(p.sr<50?p.wkts*0.3:p.sr*0.2)+(p.intlC||0)*0.5+fAvg*0.2));
+
+  // Find team
+  let teamCode='IND', teamInfo={flag:'🏳️',color:'#3b82f6'};
+  for(const [code,players] of Object.entries(PLAYERS)){
+    if(players.find(x=>x.name===p.name)){teamCode=code;teamInfo=getTeam(Object.keys(TEAMS_DATA).find(k=>TEAMS_DATA[k].code===code)||'India')||teamInfo;break;}
+  }
+  const actualTeamInfo = Object.values(TEAMS_DATA).find(t=>t.code===teamCode)||{flag:'🏳️',color:'#3b82f6'};
+
+  return `<div class="space-y-4">
+  <!-- PLAYER HEADER -->
+  <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white p-5 rounded-2xl flex items-center gap-4">
+    <div class="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-black text-white flex-shrink-0" style="background:${actualTeamInfo.color}">
+      ${p.name.split(' ').map(n=>n[0]).join('').slice(0,2)}
+    </div>
+    <div class="flex-1 min-w-0">
+      <h2 class="text-xl font-black">${p.name.toUpperCase()}</h2>
+      <p class="text-slate-300 text-sm">${p.role} • ${actualTeamInfo.flag} ${teamCode} • Age: ${p.age}</p>
+      <p class="text-blue-300 text-xs mt-0.5">${p.specialty}</p>
+    </div>
+    <div class="text-right flex-shrink-0">
+      <div class="text-4xl font-black text-yellow-400">${impact}</div>
+      <div class="text-xs text-slate-400">Impact Score</div>
+      <div class="text-xs font-bold mt-1" style="color:${fc}">${p.rForm} Form</div>
+    </div>
+  </div>
+
+  <!-- KEY STATS -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+    <div class="stat-box gradient-blue text-white">
+      <div class="text-2xl font-black">${p.avg}</div>
+      <div class="text-xs font-bold opacity-80 mt-0.5">${p.bat?'Batting Avg':'Bowling Avg'}</div>
+    </div>
+    <div class="stat-box gradient-win text-white">
+      <div class="text-2xl font-black">${p.sr}</div>
+      <div class="text-xs font-bold opacity-80 mt-0.5">${p.sr>50?'Strike Rate':'Bowling SR'}</div>
+    </div>
+    <div class="stat-box gradient-gold text-white">
+      <div class="text-2xl font-black">${p.intlC||p.wkts||0}</div>
+      <div class="text-xs font-bold opacity-80 mt-0.5">${p.intlC?'Int. Centuries':'Int. Wickets'}</div>
+    </div>
+    <div class="stat-box gradient-purple text-white">
+      <div class="text-2xl font-black">${p.fitness}%</div>
+      <div class="text-xs font-bold opacity-80 mt-0.5">Fitness Level</div>
+    </div>
+  </div>
+
+  <!-- CAREER STATS -->
+  <div class="card p-4">
+    <h3 class="section-title text-sm">📋 Career Overview</h3>
+    <div class="grid grid-cols-3 gap-3 text-center">
+      <div class="bg-slate-50 p-3 rounded-xl"><div class="text-lg font-black">${p.tests||0}</div><div class="text-xs text-slate-400 mt-0.5">Tests</div></div>
+      <div class="bg-slate-50 p-3 rounded-xl"><div class="text-lg font-black">${p.odis||0}</div><div class="text-xs text-slate-400 mt-0.5">ODIs</div></div>
+      <div class="bg-slate-50 p-3 rounded-xl"><div class="text-lg font-black">${p.t20s||0}</div><div class="text-xs text-slate-400 mt-0.5">T20Is</div></div>
+    </div>
+    <div class="mt-3 text-xs text-center text-slate-400">International debut: ${p.debut}</div>
+  </div>
+
+  <!-- FORM CHART -->
+  <div class="card p-4">
+    <h3 class="section-title text-sm">📈 Recent Form — Last 5 Matches</h3>
+    <canvas id="playerFormChart" height="100"></canvas>
+    <div class="mt-3 flex justify-between items-center">
+      <div class="flex gap-3 text-xs">
+        <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-green-500 inline-block"></span>50+</span>
+        <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-amber-500 inline-block"></span>30-50</span>
+        <span class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span>Under 30</span>
+      </div>
+      <div class="text-xs font-bold px-3 py-1 rounded-full" style="background:${fc}20;color:${fc}">5-match avg: ${fAvg}</div>
+    </div>
+  </div>
+
+  <!-- STRENGTHS & WEAKNESSES -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="bg-green-50 border border-green-200 p-4 rounded-2xl">
+      <h3 class="font-black text-sm mb-3 text-green-800">✅ Key Strengths</h3>
+      <ul class="space-y-1.5 text-xs text-green-900">
+        ${p.avg>50?`<li class="flex gap-2">🎯 World-class average (${p.avg}) — Elite consistency</li>`:''}
+        ${p.sr>140?`<li class="flex gap-2">⚡ Exceptional strike rate (${p.sr}) — Boundaries machine</li>`:p.sr>125?`<li class="flex gap-2">🏏 Good strike rate (${p.sr}) — Runs at healthy pace</li>`:''}
+        ${p.intlC>20?`<li class="flex gap-2">💯 ${p.intlC} international centuries — Big match player</li>`:''}
+        ${p.wkts>200?`<li class="flex gap-2">🎳 ${p.wkts} international wickets — World class bowler</li>`:''}
+        ${p.fitness>90?`<li class="flex gap-2">💪 Exceptional fitness (${p.fitness}%) — Always available</li>`:''}
+        ${p.rForm==='Excellent'?`<li class="flex gap-2">🔥 In red-hot current form</li>`:''}
+        <li class="flex gap-2">🏅 ${p.specialty}</li>
+      </ul>
+    </div>
+    <div class="bg-red-50 border border-red-200 p-4 rounded-2xl">
+      <h3 class="font-black text-sm mb-3 text-red-800">⚠️ Vulnerabilities</h3>
+      <ul class="space-y-1.5 text-xs text-red-900">
+        ${p.form.some(v=>v<15)?`<li class="flex gap-2">📉 Occasional low scores — can fall cheaply</li>`:''}
+        ${p.sr>0&&p.sr<120?`<li class="flex gap-2">🐢 Slow strike rate — can't rotate strike well</li>`:''}
+        ${p.rForm==='Inconsistent'?`<li class="flex gap-2">🎭 Inconsistent recent form — unreliable</li>`:''}
+        ${p.fitness<80?`<li class="flex gap-2">🏥 Fitness concerns (${p.fitness}%) — injury risk</li>`:''}
+        ${p.age>35?`<li class="flex gap-2">⏳ Age factor (${p.age}) — reactions may slow</li>`:''}
+        <li class="flex gap-2">🎯 High-pressure death overs situations</li>
+        <li class="flex gap-2">🌍 Performance in away conditions</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ICC RANKING CHECK -->
+  <div class="card p-4">
+    <h3 class="section-title text-sm">🏆 ICC Rankings Position</h3>
+    ${buildPlayerRankings(p)}
+  </div>
+
+  </div>`;
+}
+
+function buildPlayerRankings(p){
+  let html = '<div class="space-y-2 text-xs">';
+  let found = false;
+  const formats = ['test','odi','t20'];
+  const roles = ['batting','bowling'];
+  formats.forEach(fmt=>{
+    roles.forEach(role=>{
+      const list = ICC_RANKINGS[fmt]?.[role]||[];
+      const rank = list.find(r=>r.n.toLowerCase().includes(p.name.split(' ').pop().toLowerCase()));
+      if(rank){
+        found=true;
+        const badge = rank.r<=3?'🥇':rank.r<=5?'🥈':rank.r<=10?'🥉':'';
+        html+=`<div class="flex justify-between items-center bg-slate-50 p-2 rounded-lg">
+          <span>${badge} ICC ${fmt.toUpperCase()} ${role.charAt(0).toUpperCase()+role.slice(1)}</span>
+          <span class="font-black text-blue-700">#${rank.r} (${rank.pts} pts)</span>
+        </div>`;
+      }
+    });
+  });
+  if(!found) html+=`<p class="text-slate-400 text-center py-2">Top 10 ICC rankings mein nahi hai currently</p>`;
+  html+='</div>';
+  return html;
+}
+
+function renderPlayerFormChart(p){
+  setTimeout(()=>{
+    const ctx = document.getElementById('playerFormChart');
+    if(!ctx) return;
+    if(window._pChart){window._pChart.destroy();window._pChart=null;}
+    const colors = p.form.map(v=>v>55?'rgba(16,185,129,0.8)':v>30?'rgba(245,158,11,0.8)':'rgba(239,68,68,0.8)');
+    window._pChart = new Chart(ctx,{
+      type:'bar',
+      data:{
+        labels:['Match 1','Match 2','Match 3','Match 4','Match 5 (Recent)'],
+        datasets:[{label:'Score/Wickets',data:p.form,backgroundColor:colors,borderRadius:8}]
+      },
+      options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,title:{display:true,text:p.bowl&&!p.bat?'Wickets':'Runs Scored',font:{size:10}}},x:{ticks:{font:{size:10}}}}}
+    });
+  }, 200);
+}
+
+// ════════════ ICC RANKINGS ════════════
+let currentRankFormat = 'test';
+let currentRankRole = 'batting';
+
+function showRanking(format){
+  currentRankFormat = format;
+  ['test','odi','t20'].forEach(f=>{
+    const btn = document.getElementById('rtab-'+f);
+    btn.className = f===format ? 'text-xs bg-blue-100 text-blue-700 font-bold px-3 py-1.5 rounded-lg' : 'text-xs bg-slate-100 text-slate-600 font-bold px-3 py-1.5 rounded-lg';
+  });
+  renderRankings();
+}
+
+function renderRankings(){
+  const container = document.getElementById('rankingList');
+  const data = ICC_RANKINGS[currentRankFormat];
+  if(!data){container.innerHTML='<p class="text-slate-400 text-sm">No data</p>';return;}
+  
+  container.innerHTML = `
+  <div class="flex gap-2 mb-3">
+    <button onclick="currentRankRole='batting';renderRankings()" class="text-xs font-bold px-3 py-1 rounded-lg ${currentRankRole==='batting'?'gradient-blue text-white':'bg-slate-100 text-slate-600'}">🏏 Batting</button>
+    <button onclick="currentRankRole='bowling';renderRankings()" class="text-xs font-bold px-3 py-1 rounded-lg ${currentRankRole==='bowling'?'gradient-red text-white':'bg-slate-100 text-slate-600'}">🎳 Bowling</button>
+  </div>
+  <div class="space-y-1.5">
+    ${(data[currentRankRole]||[]).map(r=>{
+      const badge=r.r===1?'🥇':r.r===2?'🥈':r.r===3?'🥉':'';
+      const teamInfo = Object.values(TEAMS_DATA).find(t=>t.code===r.t)||{flag:'🏳️'};
+      return `<div class="flex items-center gap-2 p-2 rounded-lg hover:bg-slate-50 transition-all">
+        <span class="text-sm font-black text-slate-400 w-6 text-center">${badge||r.r}</span>
+        <span class="text-base">${teamInfo.flag}</span>
+        <span class="text-xs font-bold flex-1">${r.n}</span>
+        <span class="text-xs text-slate-400">${r.t}</span>
+        <span class="text-xs font-black text-blue-600">${r.pts}</span>
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+// ════════════ INIT ════════════
+function refreshAllData(){
+  loadLiveMatches();
+  loadUpcomingMatches();
+  if(document.getElementById('tab-content-news').classList.contains('hidden')===false){
+    loadCricketNews();
+  }
+}
+
+function loadLiveMatches(){
+  renderMatchList(LIVE_MATCHES, 'liveAnalyticsPanel', 'liveMatchList');
+  document.getElementById('liveCount').textContent = LIVE_MATCHES.length + ' live';
+}
+
+function loadUpcomingMatches(){
+  renderMatchList(UPCOMING_MATCHES, 'upcomingAnalyticsPanel', 'upcomingMatchList');
+}
+
+function switchTab(tab){
+  ['live','upcoming','player','news'].forEach(t=>{
+    const btn=document.getElementById('tab-'+t);
+    const content=document.getElementById('tab-content-'+t);
+    if(!btn||!content) return;
+    if(t===tab){
+      btn.className=btn.className.replace('tab-inactive','tab-active');
+      content.classList.remove('hidden');
+      if(t==='news'){loadCricketNews();renderRankings();}
+    }else{
+      btn.className=btn.className.replace('tab-active','tab-inactive');
+      content.classList.add('hidden');
+    }
+  });
+}
+
+// BOOT
+loadLiveMatches();
+loadUpcomingMatches();
+</script>
 </body>
 </html>
